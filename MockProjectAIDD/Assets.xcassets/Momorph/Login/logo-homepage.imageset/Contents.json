@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "mms_2_mm_media_logo@3x.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
