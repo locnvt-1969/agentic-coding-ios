@@ -24,6 +24,9 @@ struct ProfileKudosSection: View {
     let receivedCount: Int
     let sentCount: Int
     @Binding var selectedFilter: KudosFilterOption
+    /// When true the filter is rendered as static text (no chevron, not tappable).
+    /// Pass `true` from ProfileOtherView to lock the dropdown to .received.
+    var isFilterLocked: Bool = false
     var onCopyLink: ((Kudo) -> Void)? = nil
     var onViewDetail: ((Kudo) -> Void)? = nil
 
@@ -57,37 +60,45 @@ struct ProfileKudosSection: View {
 
     // MARK: Dropdown filter
 
+    private func filterLabel(for option: KudosFilterOption) -> String {
+        option.label(count: option == .received ? receivedCount : sentCount)
+    }
+
     private var filterDropdown: some View {
         ZStack(alignment: .topLeading) {
-            // Trigger button
-            Button(action: { showDropdown.toggle() }) {
-                HStack(spacing: 8) {
-                    Text(selectedFilter.label(
-                        count: selectedFilter == .received ? receivedCount : sentCount
-                    ))
+            if isFilterLocked {
+                // Locked: static label only — no chevron, not tappable
+                Text(filterLabel(for: selectedFilter))
                     .font(.custom("Montserrat-Regular", size: 14))
                     .foregroundStyle(Color.white)
                     .tracking(0.25)
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color.white)
+                    .padding(.horizontal, 8)
+                    .frame(height: 40)
+                    .background(Color.profileDropdownBg)
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.profileDropdownBorder, lineWidth: 1))
+            } else {
+                // Interactive trigger button
+                Button(action: { showDropdown.toggle() }) {
+                    HStack(spacing: 8) {
+                        Text(filterLabel(for: selectedFilter))
+                            .font(.custom("Montserrat-Regular", size: 14))
+                            .foregroundStyle(Color.white)
+                            .tracking(0.25)
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color.white)
+                    }
+                    .padding(.horizontal, 8)
+                    .frame(height: 40)
+                    .background(Color.profileDropdownBg)
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.profileDropdownBorder, lineWidth: 1))
                 }
-                .padding(.horizontal, 8)
-                .frame(height: 40)
-                .background(Color.profileDropdownBg)
-                .clipShape(RoundedRectangle(cornerRadius: 4))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 4)
-                        .stroke(Color.profileDropdownBorder, lineWidth: 1)
-                )
-            }
-            .buttonStyle(.plain)
-
-            // Dropdown list overlay
-            if showDropdown {
-                dropdownMenu
-                    .offset(y: 44)
-                    .zIndex(10)
+                .buttonStyle(.plain)
+                if showDropdown {
+                    dropdownMenu.offset(y: 44).zIndex(10)
+                }
             }
         }
     }
@@ -100,9 +111,7 @@ struct ProfileKudosSection: View {
                     showDropdown = false
                 }) {
                     HStack {
-                        Text(option.label(
-                            count: option == .received ? receivedCount : sentCount
-                        ))
+                        Text(filterLabel(for: option))
                         .font(.custom("Montserrat-Medium", size: 14))
                         .foregroundStyle(
                             selectedFilter == option ? Color.profileNameHighlight : Color.white
