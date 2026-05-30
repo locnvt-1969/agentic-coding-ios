@@ -23,7 +23,7 @@ enum KudoError: LocalizedError {
 struct KudoFilter: Hashable {
     var hashtagId: String?
     var departmentId: String?
-    init(hashtagId: String? = nil, departmentId: String? = nil) {
+    nonisolated init(hashtagId: String? = nil, departmentId: String? = nil) {
         self.hashtagId = hashtagId
         self.departmentId = departmentId
     }
