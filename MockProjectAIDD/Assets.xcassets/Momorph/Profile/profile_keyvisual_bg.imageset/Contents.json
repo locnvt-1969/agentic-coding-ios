@@ -1,0 +1,13 @@
+{
+  "images" : [
+    {
+      "filename" : "profile_keyvisual_bg.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

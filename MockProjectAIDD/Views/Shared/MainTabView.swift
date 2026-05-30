@@ -30,9 +30,29 @@ struct MainTabView: View {
                     .tabItem { Label("Alerts", systemImage: "bell.fill") }
                     .tag(Tab.notifications)
 
-                TabPlaceholder(title: "Profile")
-                    .tabItem { Label("Profile", systemImage: "person.fill") }
-                    .tag(Tab.profile)
+                ProfileSelfView(
+                    user: User(
+                        id: "u1",
+                        name: "Huỳnh Dương Xuân Nhật",
+                        avatarURL: nil,
+                        departmentName: "CEVC3",
+                        role: "Engineer",
+                        level: "Legend Hero",
+                        awardTypes: [.mvp, .topTalent]
+                    ),
+                    awards: [
+                        Award(id: "a1", type: .mvp, recipientName: "Huỳnh Dương Xuân Nhật"),
+                        Award(id: "a2", type: .topTalent, recipientName: "Huỳnh Dương Xuân Nhật")
+                    ],
+                    onEdit: {},
+                    onOpenAward: { _ in },
+                    kudos: [],
+                    kudosReceivedCount: 5,
+                    kudosSentCount: 5,
+                    onOpenSecretBox: {}
+                )
+                .tabItem { Label("Profile", systemImage: "person.fill") }
+                .tag(Tab.profile)
             }
             .navigationDestination(for: NavDestination.self) { destination in
                 NavDestinationView(destination: destination)
