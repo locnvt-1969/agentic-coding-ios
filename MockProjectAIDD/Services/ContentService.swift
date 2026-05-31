@@ -23,7 +23,8 @@ final class ContentService {
 
     func communityStandards() async throws -> CommunityStandard {
         // TODO: Supabase / bundled content — community standards.
-        return CommunityStandard(sections: [])
+        // Mock: canonical content sourced from the design (see CommunityStandard.figmaSample).
+        return .figmaSample
     }
 
     func rules() async throws -> Rule {

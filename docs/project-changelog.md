@@ -2,6 +2,15 @@
 
 ## [Unreleased] — 2026-06-01
 
+### Added — Community Standards screen: mock content + UI refinement
+
+- `ContentSection` — added optional `leadParagraph`, `numberedItems`, `bulletItems`, `highlight` fields (all defaulted; backward-compatible with existing Rules rendering)
+- `CommunityStandardsSectionView` — renders structured sections with gold-bold title → lead paragraph → body → numbered list (1–10, hanging indent) → bullet points → gold-bold contact highlight
+- `CommunityStandard.figmaSample` — populated with full design content (2 sections: "Tiêu chuẩn cộng đồng" with 10 spam criteria + "Tiêu chuẩn bảo mật" with 2 security bullets + contact info)
+- `ContentService.communityStandards()` — returns `CommunityStandard.figmaSample` (mock; `// TODO: Supabase` deferred)
+- Build: `xcodebuild build` → SUCCEEDED; Code review: 8/10, 0 critical issues; Visual validation: simulator screenshot verified against MoMorph design
+- **Known follow-ups (pre-existing / future):** (a) container double error-UI pattern (ContainerErrorView + .alert) shared across containers; (b) `ContentSection.decodeIfPresent` when Supabase JSON path wired
+
 ### Added — Send/Write Kudo screen logic (mock data path)
 
 - `FeatureFlags` — new `useMockKudoData: Bool` (default `true`); when true, `SendKudoViewModel` loads mock recipients/hashtags/current-user and simulates submit; real `KudoService`/`UserService` path is preserved in the `else` branch
