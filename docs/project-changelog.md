@@ -2,6 +2,13 @@
 
 ## [Unreleased] — 2026-06-01
 
+### Added — Supabase REST client + ContentService (Increment 1 of API integration)
+
+- `Services/SupabaseRESTClient.swift` — reusable actor-based PostgREST client (GET + headers + `convertFromSnakeCase` decode + typed error enum); pattern extracted from `AwardsService` for DRY across all data services
+- `Services/ContentService.swift` — `communityStandards()` + `rules()` wired to read live `content_sections` table from local Supabase instance (anon key, no auth required)
+- Build: SUCCEEDED · Code review: 8/10, 0-critical (2 fixes applied) · Integration: live-DB read end-to-end verified (Community Standards screen renders values written directly into DB)
+- **Increment 1 scope:** REST client + public-read Content only (no SDK yet, no RPC, no auth). Deferred to Increment 2: Supabase Swift SDK, Google OAuth, KudoService/AwardService wiring, user-context services, all integration & verification.
+
 ### Added — Notifications screen: mock data + UI refinement
 
 - `FeatureFlags` — new `useMockNotifications: Bool` (default `true`); when true, `NotificationsViewModel` loads 7 mock notifications (one per `AppNotification.Kind`) and mark-read is local-only; real `NotificationService` path preserved in the `else` branch (3rd `useMock*` flag after `useMockAwards`, `useMockKudoData`)

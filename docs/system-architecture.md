@@ -79,9 +79,11 @@ The bottom tab bar is owned by `MainTabView`; individual screens (including Home
 
 ## Services
 
-Domain services follow the same contract: `@MainActor final class`, `static let shared`, typed `LocalizedError` enum, `async throws` methods. Currently stubbed — Supabase calls are TODO comments.
+Domain services follow the same contract: `@MainActor final class`, `static let shared`, typed `LocalizedError` enum, `async throws` methods. Most domain services are still stubbed — Supabase calls are TODO comments — except where noted below.
 
 **Mock extension pattern:** where temporary mock data is needed before Supabase wiring, it lives in a separate `<Service>+Mock.swift` extension file (e.g. `KudoService+Mock.swift`). The primary service file is unchanged; swapping to real API calls is surgical — replace the mock return with a Supabase call in the extension or primary file. This keeps mock data out of production service logic.
+
+**Infrastructure:** `SupabaseRESTClient` (`actor`, `static let shared`) is the shared PostgREST transport. It executes `GET` requests with `apikey` + `Bearer` headers, snake_case → camelCase JSON decoding, and typed `SupabaseRESTError`. An `accessToken: String?` property (settable via `setAccessToken(_:)`) carries the user JWT when available; falls back to the anon key for public reads. POST/PATCH/DELETE/RPC and user-JWT wiring are planned for later phases. All domain services that hit the real DB delegate to this client rather than constructing their own `URLRequest`.
 
 | Service | Domain |
 |---|---|
@@ -91,7 +93,7 @@ Domain services follow the same contract: `@MainActor final class`, `static let 
 | `AwardService` | List awards by type (stubbed) |
 | `NotificationService` | List, mark-read notifications |
 | `SecretBoxService` | Fetch/send secret box gifts |
-| `ContentService` | Static content sections, community standards, rules |
+| `ContentService` | `communityStandards()` and `rules()` fetch `content_sections` from the live local Supabase via `SupabaseRESTClient`; in-memory fallback removed |
 
 ### Home feature — live runtime services
 
@@ -129,10 +131,11 @@ Local instance: `http://localhost:54321`
 | Table | Migration | Notes |
 |---|---|---|
 | `public.awards` | `supabase/migrations/20260529000000_create_awards.sql` | RLS enabled; anon-read policy |
+| `public.content_sections` | — | Stores static document rows (columns: `document_id`, `display_order`, plus content fields); queried by `ContentService` filtered on `document_id` (`community_standards`, `rules`) |
 
 Seed data: `supabase/seeds/awards.sql` (3 rows: Top Talent, Top Project, Top Manager).
 
-**Backend transport:** Direct `URLSession` to Supabase REST (`/rest/v1`). The Supabase Swift SDK is NOT installed; `AuthService` Google sign-in is stubbed until SPM adds the SDK.
+**Backend transport:** `SupabaseRESTClient` (`actor`) provides a shared PostgREST GET layer over `URLSession`. All REST-connected services use it. The Supabase Swift SDK is NOT installed; `AuthService` Google sign-in is stubbed until SPM adds the SDK.
 
 ---
 
@@ -149,6 +152,6 @@ Track A (UI screens) — complete (14 presentational SwiftUI screens + Home scre
 Phase 19 (integration) — complete; 13 container views wired, nav graph fully resolved, loading/error states handled.  
 Kudos board UI — Spotlight board, personal stats block, and Top-10 gift recipients sections added (+ header & hero); "Mở Secret Box" wired to router; mock data via `KudoService+Mock.swift`.  
 Notifications screen — mock data complete (`FeatureFlags.useMockNotifications = true`); 7 notification kinds with tap-to-mark-read and mark-all-read; `contentHidden` links to Community Standards; per-type deep navigation deferred.  
-App is UI-complete. Home awards load from mock data by default (`FeatureFlags.useMockAwards = true`); the live REST path exists but is not the default. Send Kudo screen is logic-complete on the mock path (`FeatureFlags.useMockKudoData = true`): validation, self-send guard, max-5-hashtags, cancel-confirm dialog, and success toast/pop are functional; rich-text toolbar, @mention, and image-upload remain visual-only. All other service methods are stubbed. Real data wiring is pending SDK installation.
+App is UI-complete. **Supabase API integration Increment 1 complete:** `SupabaseRESTClient` (shared actor) provides the reusable PostgREST GET transport; `ContentService` (`communityStandards()` + `rules()`) reads the live `content_sections` table — the first domain service beyond `AwardsService` to use the real DB. Home awards load from mock data by default (`FeatureFlags.useMockAwards = true`); the live REST path exists but is not the default. Send Kudo screen is logic-complete on the mock path (`FeatureFlags.useMockKudoData = true`): validation, self-send guard, max-5-hashtags, cancel-confirm dialog, and success toast/pop are functional; rich-text toolbar, @mention, and image-upload remain visual-only. All other service methods are stubbed. POST/PATCH/DELETE/RPC support and user-JWT wiring are planned for later increments.
 
 **UI scroll pattern (full-screen content screens):** `safeAreaInset(.top)` + background keyvisual + `toolbar(.hidden)` is the established pattern for screens that render a custom header with a background image extending behind the status bar. Applied to: `NotificationsView`, `CommunityStandardsView`, `RulesView`. The `.ignoresSafeArea(.top)` approach is deprecated for these screens.

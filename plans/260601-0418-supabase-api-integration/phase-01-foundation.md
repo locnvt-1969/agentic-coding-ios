@@ -1,6 +1,6 @@
 # Phase 01 — Foundation (SDK + client + config + RPC)
 
-**Priority:** Blocking · **Status:** pending · **Depends:** —
+**Priority:** Blocking · **Status:** in-progress (Increment 1: REST client done; SDK + RPC deferred) · **Depends:** —
 
 ## Goal
 Set up the Supabase Swift SDK, a shared client, config verification, the OAuth URL scheme, DTO conventions, and a `get_profile` RPC — the base every later phase builds on.

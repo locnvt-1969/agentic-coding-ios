@@ -22,13 +22,37 @@ final class ContentService {
     private init() {}
 
     func communityStandards() async throws -> CommunityStandard {
-        // TODO: Supabase / bundled content — community standards.
-        // Mock: canonical content sourced from the design (see CommunityStandard.figmaSample).
-        return .figmaSample
+        do {
+            let sections = try await SupabaseRESTClient.shared.get(
+                "content_sections",
+                query: [
+                    URLQueryItem(name: "document_id", value: "eq.community_standards"),
+                    URLQueryItem(name: "order", value: "display_order.asc"),
+                    URLQueryItem(name: "select", value: "*")
+                ],
+                as: [ContentSection].self
+            )
+            return CommunityStandard(sections: sections)
+        } catch {
+            throw ContentError.loadFailed(error.localizedDescription)
+        }
     }
 
     func rules() async throws -> Rule {
-        // TODO: Supabase / bundled content — rules (Thể lệ).
-        return Rule(title: "Thể lệ", sections: [])
+        // Title is the document name; the Rules screen also composes hero tiers + value icons.
+        do {
+            let sections = try await SupabaseRESTClient.shared.get(
+                "content_sections",
+                query: [
+                    URLQueryItem(name: "document_id", value: "eq.rules"),
+                    URLQueryItem(name: "order", value: "display_order.asc"),
+                    URLQueryItem(name: "select", value: "*")
+                ],
+                as: [ContentSection].self
+            )
+            return Rule(title: "Thể lệ", sections: sections)
+        } catch {
+            throw ContentError.loadFailed(error.localizedDescription)
+        }
     }
 }

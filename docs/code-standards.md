@@ -102,7 +102,8 @@ func doAction() async {
 ## Supabase Integration
 
 - `AuthService` wraps all auth calls. ViewModels and Views never import Supabase directly.
-- Backend transport: direct `URLSession` to Supabase REST (`/rest/v1`). No Supabase Swift SDK currently.
+- Backend transport: `SupabaseRESTClient` (`actor`, `static let shared`) — the canonical PostgREST GET client. Use it in new services; do not construct raw `URLRequest` + `URLSession` inline. No Supabase Swift SDK currently.
+- Services that need authenticated reads call `SupabaseRESTClient.shared.setAccessToken(_:)` once a session is available; the client falls back to the anon key for unauthenticated reads.
 - OAuth redirect URL scheme: `com.mockprojectaidd://login-callback` — must be registered in Xcode project Info → URL Types.
 
 ---

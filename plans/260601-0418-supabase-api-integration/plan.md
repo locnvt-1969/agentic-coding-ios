@@ -38,5 +38,29 @@ Thay toàn bộ stub service bằng lệnh gọi Supabase thật, để mọi ch
 - Heart/un-heart, kudo `title`/recipient đơn: cần bổ sung method + chỉnh model (P3/P5).
 
 ## Status
-- [ ] P1 Foundation  - [ ] P2 Auth  - [ ] P3 Models/DTO
-- [ ] P4 Read services  - [ ] P5 User services  - [ ] P6 Integration & verify
+
+**Increment 1 (2026-06-01, Batch 1) — Build SUCCEEDED, Review 8/10 0-critical, Live-DB verified**
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| P1 Foundation | **PARTIAL** | REST client (`SupabaseRESTClient.swift`) done; SDK + RPC (`get_profile`) deferred to Increment 2 |
+| P2 Auth | pending | Deferred; blocks real session + user-context reads |
+| P3 Models/DTO | pending | Deferred; snake_case decode wired in REST client |
+| P4 Read services | **PARTIAL** | `ContentService` wired (reads `content_sections` live); KudoService/AwardService/hashtags/departments pending |
+| P5 User services | pending | Blocked on P2 (auth); deferred to Increment 2 |
+| P6 Integration & verify | pending | Deferred pending P5 completion |
+
+**Increment 1 Deliverables:**
+- ✅ `Services/SupabaseRESTClient.swift` (actor, GET + typed errors, snake_case decode)
+- ✅ `Services/ContentService.swift` wired (reads `content_sections` live from DB, verified end-to-end)
+- ✅ Build: SUCCEEDED
+- ✅ Review: 8/10, 0 critical (2 fixes applied)
+- ✅ Live-DB read verified (Community Standards screen renders DB value)
+
+**Increment 2 (planned) — Auth + full read-public + user-context**
+- P1 rest: SDK + SupabaseClientProvider + RPC
+- P2 full: Google OAuth
+- P3 full: Kudo model alignment
+- P4 rest: KudoService + AwardService + hashtags/departments
+- P5 full: sendKudo + reactions + profile + secret box + notifications
+- P6 full: integration + verify all flows
