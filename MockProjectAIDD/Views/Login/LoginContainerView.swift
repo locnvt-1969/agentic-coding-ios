@@ -15,8 +15,9 @@ struct LoginContainerView: View {
             selectedLanguage: viewModel.selectedLanguage,
             isLoading: viewModel.isLoading,
             onLoginWithGoogle: {
-                router.navigate(to: .home)
-//                await viewModel.loginWithGoogle()
+                // DEV: signs in the seeded test user via email/password (AuthService).
+                // Navigation to Home happens on `isAuthenticated` change below.
+                await viewModel.loginWithGoogle()
             },
             onLanguageChange: { code in
                 if let lang = AppLanguage(rawValue: code) {

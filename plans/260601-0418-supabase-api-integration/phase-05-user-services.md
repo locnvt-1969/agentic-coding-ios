@@ -1,6 +1,12 @@
 # Phase 05 — User-context services (needs session)
 
-**Priority:** High · **Status:** pending · **Depends:** P02, P03
+**Priority:** High · **Status:** PARTIAL (2026-06-01) · **Depends:** P02, P03
+
+**Implementation summary (2026-06-01) — Self-Profile path DONE:**
+- UserService.fetchCurrentUser() ← get_profile(uid) RPC → User + icons + dept
+- UserService.fetchProfileStats(userId) ← v_profile_stats view
+- ProfileSelfContainer: wired to live UserService; displays real name/dept/icons/stats from DB
+- Build: SUCCEEDED, Review: 0-critical (4 fixes), End-to-end: verified (login → Profile shows live DB data)
 
 ## Goal
 Wire services that depend on the logged-in user (`auth.uid()` via RLS).

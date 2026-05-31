@@ -15,15 +15,8 @@ struct ProfileDTO: Decodable {
     let role: String?
     let heroLabel: String?
     let valueIconIds: [String]
-    let stats: Stats
-
-    struct Stats: Decodable {
-        let kudosReceived: Int
-        let kudosSent: Int
-        let heartsReceived: Int
-        let secretBoxOpened: Int
-        let secretBoxUnopened: Int
-    }
+    // Note: get_profile also returns a `stats` object, but profile stats are read
+    // separately via UserService.fetchProfileStats (v_profile_stats). Decoder ignores it.
 
     /// Domain user (Hero tier → `level`, DB icon slugs → `SunValueIcon`).
     /// `awardTypes` is intentionally left default ([]) — awards are fetched separately
@@ -37,16 +30,6 @@ struct ProfileDTO: Decodable {
             role: role,
             level: heroLabel,
             collectedValueIcons: valueIconIds.compactMap(SunValueIcon.init(dbId:))
-        )
-    }
-
-    func toStats() -> ProfileStatsData {
-        ProfileStatsData(
-            kudosReceived: stats.kudosReceived,
-            kudosSent: stats.kudosSent,
-            heartsReceived: stats.heartsReceived,
-            secretBoxOpened: stats.secretBoxOpened,
-            secretBoxUnopened: stats.secretBoxUnopened
         )
     }
 }

@@ -35,16 +35,12 @@ final class UserService {
     ]
 
     func fetchCurrentUser() async throws -> User {
-        // TODO: Supabase — fetch authenticated user profile.
-        // Mock (from design): self profile — icon collection still empty.
-        return User(
-            id: "me",
-            name: "Huỳnh Dương Xuân Nhật",
-            departmentName: "CEVC3",
-            role: "Engineer",
-            level: "Legend Hero",
-            collectedValueIcons: []
+        guard let uid = AuthService.shared.currentUserId else { throw UserError.notFound }
+        let dto = try await SupabaseRESTClient.shared.callRPC(
+            "get_profile", body: ["p_id": uid], as: ProfileDTO?.self
         )
+        guard let dto else { throw UserError.notFound }
+        return dto.toUser()
     }
 
     func fetchUser(id: String) async throws -> User {
@@ -62,15 +58,16 @@ final class UserService {
     }
 
     func fetchProfileStats(userId: String?) async throws -> ProfileStatsData {
-        // TODO: Supabase — aggregate profile stats for the given user (nil = current user).
-        // Mock values taken from the design.
-        return ProfileStatsData(
-            kudosReceived: 5,
-            kudosSent: 25,
-            heartsReceived: 25,
-            secretBoxOpened: 25,
-            secretBoxUnopened: 25
+        guard let id = userId ?? AuthService.shared.currentUserId else { throw UserError.notFound }
+        let rows = try await SupabaseRESTClient.shared.get(
+            "v_profile_stats",
+            query: [
+                URLQueryItem(name: "profile_id", value: "eq.\(id)"),
+                URLQueryItem(name: "select", value: "*")
+            ],
+            as: [ProfileStatsData].self
         )
+        return rows.first ?? .zero
     }
 
     func searchSunners(query: String) async throws -> [User] {

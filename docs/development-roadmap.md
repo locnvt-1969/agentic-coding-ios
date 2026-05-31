@@ -54,17 +54,23 @@ Last updated: 2026-06-01
 ---
 
 ## Phase 6 — Profile Screen
-**Status: Complete (mock data layer)**
+**Status: Complete (live DB wired for self-profile)**
 
-- `ProfileSelfView` + `ProfileOtherView` wired with mock data
-- `SunValueIcon` collection rendering with dynamic labels
-- `ProfileStatsData` model established (5/25/25/25/25 stats)
-- Spam-tagged kudos display implemented
-- All service mocks in place; Supabase API wiring deferred to Phase 7
+- `ProfileSelfView` + `ProfileOtherView` wired with service layer
+- `SunValueIcon` collection rendering with dynamic labels + DB slug mapping
+- `ProfileStatsData` model established; fetched from `v_profile_stats` view
+- `UserService` wired: fetchCurrentUser (get_profile RPC) + fetchProfileStats (view query) read live DB
+- Self-profile displays real name/department/icons/stats from DB (login → Profile verified end-to-end)
+- Other-profile + Kudos board still mock; Supabase API for Kudo ops / Secret Box / Notifications deferred to Phase 7
 
 ---
 
-## Phase 7 — Supabase Swift SDK Integration
-**Status: Not started**
+## Phase 7 — Supabase API Integration (Kudo ops + Secret Box + Notifications)
+**Status: In Progress**
 
-Prerequisite for live Google OAuth. Add via SPM, then replace `AuthService` stubs.
+Remaining user-context services: sendKudo + reactions (heart/un-heart) + secret box open + notifications list.
+- `KudoService`: sendKudo (insert + hash tags), viewKudo, react/unreact
+- `SecretBoxService`: currentBox, openBox
+- `NotificationService`: listNotifications, markRead, unreadCount
+- `UserService`: fetchUser (other-profile), searchSunners
+Integration + end-to-end verification per Phase 6 (Supabase API Integration plan).

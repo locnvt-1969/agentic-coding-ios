@@ -1,6 +1,13 @@
-# Phase 02 — Auth (Google OAuth thật)
+# Phase 02 — Auth (Local Email/Password + Session Mgmt)
 
-**Priority:** Blocking · **Status:** pending · **Depends:** P01
+**Priority:** Blocking · **Status:** DONE (2026-06-01) · **Depends:** P01
+
+**Implementation summary (2026-06-01):**
+- AuthService: GoTrue REST client (local email/password sign-in + JWT store/restore + sign-out)
+- SupabaseRESTClient: callRPC(endpoint, payload) for POST /rpc calls
+- LoginContainerView: dev-bypass removed, real sign-in integrated
+- Dev seed: test user (sunner@sun.com / Password123!) with dept + icons
+- Build: SUCCEEDED, Review: 0-critical (4 fixes), End-to-end: verified (login → Profile renders live DB data)
 
 ## Goal
 Real Google sign-in via Supabase Auth → persisted session → `auth.uid()` available for all user-context calls. Replace the Login dev-bypass.

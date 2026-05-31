@@ -2,7 +2,18 @@
 
 ## [Unreleased] — 2026-06-01
 
-### Added — Supabase API groundwork: get_profile RPC + model/DTO alignment (Increment 2 baseline, auth-independent)
+### Added — Supabase Auth (local email/password) + self-Profile wiring (Increment 2 Batch 2)
+
+- `AuthService` — real login via GoTrue REST (email/password sign-in), JWT storage + session restore + sign-out; sets JWT on SupabaseRESTClient for authenticated RPC/REST calls
+- `SupabaseRESTClient` — added `callRPC(endpoint, payload)` method for POST /rpc requests (e.g., `get_profile(user_id)`)
+- `UserService` — wired `fetchCurrentUser()` (calls `get_profile(uid)` RPC) and `fetchProfileStats(userId)` (queries `v_profile_stats` view); both now read live DB
+- `LoginContainerView` — removed dev-bypass, now calls real `signIn(email, password)` on Google button tap; on success, sets `isAuthenticated` → navigates to Home
+- `ProfileDTO` — removed dead stats/toStats methods (consolidated into ProfileStatsData)
+- `seeds/dev/00_dev_users.sql` — seeded test user `sunner@sun.com` / `Password123!` with department and 3 collected value icons; `config.toml` `sql_paths` enabled
+- Build: SUCCEEDED · Review: 0-critical (4 fixes applied) · End-to-end: login → Profile displays real name/department/icons/stats from DB (verified via curl + in-app screenshot)
+- **Known follow-ups (pre-prod gates):** JWT expiry/refresh (H1), SendKudoViewModel currentUserId binding (M3), revoke PUBLIC EXECUTE on Postgres functions (security hardening)
+
+### Added — Supabase API groundwork: get_profile RPC + model/DTO alignment (Increment 2 Batch 1, auth-independent)
 
 - `supabase/migrations/20260601000800_get_profile_rpc.sql` — `get_profile(p_id uuid)` RPC (SECURITY DEFINER) returns composed JSON: profile user data + department name + hero tier label + collected value icon IDs + stats (kudos received/sent, hearts, secret box counts); grant to `authenticated` only (PUBLIC EXECUTE revoked for security)
 - `Models/SunValueIcon.swift` — added `dbId` property + `init?(dbId:)` for bidirectional DB slug ↔ enum case mapping (`'touch_of_light'` ↔ `.touchOfLight`)

@@ -2,9 +2,9 @@
 // MockProjectAIDD
 //
 // Thin reusable PostgREST client (generalises the AwardsService pattern).
-// Used by the data services to read/write the local Supabase instance over REST.
-// Auth: currently sends the anon key. When real sessions land (auth phase),
-// `accessToken` should carry the user JWT so RLS sees auth.uid().
+// An `actor` so HTTP + JSON decoding run off the main thread and `accessToken`
+// (set by AuthService after sign-in) is mutated/read serially without data races.
+// Auth: sends the user JWT once set, else the anon key for public reads.
 
 import Foundation
 
@@ -16,16 +16,14 @@ enum SupabaseRESTError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidURL:                 return "URL không hợp lệ."
-        case .network(let m):             return "Lỗi mạng: \(m)"
-        case .serverStatus(let c, _):     return "Máy chủ trả về lỗi \(c)."
-        case .decoding:                   return "Không thể đọc dữ liệu từ máy chủ."
+        case .invalidURL:             return "URL không hợp lệ."
+        case .network(let m):         return "Lỗi mạng: \(m)"
+        case .serverStatus(let c, _): return "Máy chủ trả về lỗi \(c)."
+        case .decoding:               return "Không thể đọc dữ liệu từ máy chủ."
         }
     }
 }
 
-/// An `actor` so HTTP + JSON decoding run off the main thread and `accessToken`
-/// (set later by the auth phase) is mutated/read serially without data races.
 actor SupabaseRESTClient {
     static let shared = SupabaseRESTClient()
     private init() {}
@@ -33,8 +31,7 @@ actor SupabaseRESTClient {
     private let session = URLSession.shared
 
     /// User access token once authenticated; falls back to the anon key for public reads.
-    var accessToken: String?
-
+    private var accessToken: String?
     func setAccessToken(_ token: String?) { accessToken = token }
 
     private let decoder: JSONDecoder = {
@@ -43,7 +40,7 @@ actor SupabaseRESTClient {
         return d
     }()
 
-    // MARK: - GET (PostgREST table/view)
+    // MARK: - GET (table/view)
 
     /// GET `restURL/<path>?<query>` and decode the JSON body to `T`.
     func get<T: Decodable>(_ path: String, query: [URLQueryItem] = [], as type: T.Type) async throws -> T {
@@ -57,7 +54,27 @@ actor SupabaseRESTClient {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         applyHeaders(&request)
+        return try await send(request)
+    }
 
+    // MARK: - RPC (POST /rpc/<name>)
+
+    /// Call a Postgres function via PostgREST and decode the returned JSON to `T`.
+    func callRPC<T: Decodable>(_ name: String, body: [String: Any] = [:], as type: T.Type) async throws -> T {
+        let url = SupabaseConfig.restURL.appendingPathComponent("rpc").appendingPathComponent(name)
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        applyHeaders(&request)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if !body.isEmpty {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        }
+        return try await send(request)
+    }
+
+    // MARK: - Shared execution
+
+    private func send<T: Decodable>(_ request: URLRequest) async throws -> T {
         let data: Data
         let response: URLResponse
         do {
@@ -65,19 +82,15 @@ actor SupabaseRESTClient {
         } catch {
             throw SupabaseRESTError.network(error.localizedDescription)
         }
-
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
             throw SupabaseRESTError.serverStatus(http.statusCode, String(data: data, encoding: .utf8) ?? "")
         }
-
         do {
             return try decoder.decode(T.self, from: data)
         } catch {
             throw SupabaseRESTError.decoding(error.localizedDescription)
         }
     }
-
-    // MARK: - Headers
 
     private func applyHeaders(_ request: inout URLRequest) {
         let bearer = accessToken ?? SupabaseConfig.anonKey

@@ -39,18 +39,18 @@ Thay toàn bộ stub service bằng lệnh gọi Supabase thật, để mọi ch
 
 ## Status
 
-**Increment 2 (2026-06-01, Batch 1 Groundwork) — Build SUCCEEDED, Review 0-critical (2 fixes), end-to-end verified**
+**Increment 2 (2026-06-01, Batch 2 Auth + Self-Profile) — Build SUCCEEDED, Review 0-critical (4 fixes), end-to-end verified**
 
 | Phase | Status | Notes |
 |-------|--------|-------|
 | P1 Foundation | **PARTIAL** | REST client + RPC `get_profile(p_id)` done (migration applied, verified); SDK client + auth (SupabaseClientProvider) deferred to implementation |
-| P2 Auth | pending | Deferred; blocks real session + user-context reads |
+| P2 Auth | **DONE** | AuthService: real local email/password sign-in (GoTrue REST) + session restore + sign-out; JWT set on SupabaseRESTClient. Google OAuth dev alias (signInWithGoogle = test user seeded); real Google OAuth deferred to prod. Build: SUCCEEDED · Review: 0-critical. |
 | P3 Models/DTO | **PARTIAL** | `SunValueIcon.dbId` + `init?(dbId:)`, `Kudo.title`, `ProfileDTO` (maps to User + stats) done; KudoDTO + full Kudo recipient alignment pending |
 | P4 Read services | **PARTIAL** | `ContentService` wired (reads `content_sections` live); KudoService/AwardService/hashtags/departments pending |
-| P5 User services | pending | Blocked on P2 (auth); deferred to implementation phase |
-| P6 Integration & verify | pending | Deferred pending P5 completion |
+| P5 User services | **PARTIAL** | `UserService`: fetchCurrentUser (get_profile RPC) + fetchProfileStats (v_profile_stats) wired; live DB verified. KudoService/SecretBox/Notification/search pending. |
+| P6 Integration & verify | pending | P5 partial ✓; remaining: Kudo ops + Secret Box + Notifications + search wiring |
 
-**Increment 2 Groundwork Deliverables (auth-independent baseline):**
+**Increment 2 Batch 1 (Auth-Independent) — COMPLETED:**
 - ✅ `supabase/migrations/20260601000800_get_profile_rpc.sql` — `get_profile(p_id)` RPC (composed profile JSON: user + dept + hero tier + icons + stats), SECURITY DEFINER, grant to `authenticated` only (PUBLIC execute revoked)
 - ✅ `Models/SunValueIcon.swift` — added `dbId` property + `init?(dbId:)` (DB slug ↔ case mapper)
 - ✅ `Models/Kudo.swift` — added `title: String?` (optional danh hiệu/heading)
@@ -59,15 +59,24 @@ Thay toàn bộ stub service bằng lệnh gọi Supabase thật, để mọi ch
 - ✅ Review: 0 critical (2 fixes applied)
 - ✅ `get_profile` RPC verified end-to-end
 
-**Follow-ups logged (do not implement):**
-- P5 gate: `SupabaseRESTClient` needs `post(rpc:)` method before wiring get_profile (currently GET-only)
-- P5: map RPC NULL (unknown id) → `UserError.notFound` in service layer
-- SECURITY: all custom Postgres functions default to PUBLIC EXECUTE; `grant_national_kudos` (SECURITY DEFINER, writes `user_rewards`) currently PUBLIC-callable — revoke EXECUTE from PUBLIC on gamification/notification functions in migration 20260601000700 during P2 hardening
+**Increment 2 Batch 2 (Auth + Self-Profile) — COMPLETED:**
+- ✅ `AuthService` — local email/password sign-in (GoTrue REST) + JWT store/restore + sign-out; sets JWT on SupabaseRESTClient
+- ✅ `SupabaseRESTClient` — added `callRPC(endpoint, payload)` (POST /rpc) + shared send logic
+- ✅ `UserService` — fetchCurrentUser (get_profile RPC) + fetchProfileStats (v_profile_stats) wired; live DB verified
+- ✅ `LoginContainerView` — removed dev-bypass, now calls real `signIn(email, password)`
+- ✅ `ProfileDTO` — removed dead stats/toStats (consolidated in ProfileStatsData)
+- ✅ Dev seed — `seeds/dev/00_dev_users.sql` with test user (sunner@sun.com / Password123!) + dept + 3 value icons
+- ✅ Build: SUCCEEDED
+- ✅ Review: 0 critical (4 fixes applied)
+- ✅ End-to-end: login → Profile shows real name/dept/icons/stats from DB (curl + in-app screenshot verified)
 
-**Remaining Increment 2 work (deferred to implementation):**
-- P1 rest: SDK installation + SupabaseClientProvider + HTTP client wiring
-- P2 full: Google OAuth + session restore/sign-out + router gate
+**Follow-ups logged (H1 + M3 issues, do NOT implement now):**
+- H1 (pre-prod gate): no JWT expiry/refresh check on session restore → silent 401 when token expires; add refresh_token grant + 401→login handler before prod
+- M3 (when Kudos wired): SendKudoViewModel self-send guard uses `currentUserId=""` on live path → set to `AuthService.shared.currentUserId`
+- SECURITY (pre-prod): revoke PUBLIC EXECUTE on migration-700 functions (`grant_national_kudos` etc.) before prod
+
+**Remaining Increment 2 work (Batch 3 onwards):**
 - P3 rest: KudoDTO + recipient alignment
-- P4 rest: KudoService + AwardService + hashtags/departments wired
-- P5 full: sendKudo + reactions + profile + secret box + notifications via SDK/RPC
+- P4 rest: KudoService + AwardService + hashtags/departments wired (public-read path)
+- P5 rest: sendKudo + reactions + secret box + notifications via RPC/REST (auth-required path)
 - P6 full: integration + end-to-end verification
