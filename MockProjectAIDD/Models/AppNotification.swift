@@ -4,11 +4,15 @@
 import Foundation
 
 struct AppNotification: Identifiable, Hashable, Codable {
+    /// 7 notification types from the Figma spec — each drives a distinct icon/color.
     enum Kind: String, Codable, Hashable {
-        case kudoReceived
-        case kudoReaction
-        case awardGranted
-        case system
+        case kudoReceived     // envelope (blue)   — a Sunner sent you a kudo
+        case kudoReaction     // heart (pink)      — your kudo received a reaction
+        case secretBox        // gift (green)      — a Secret Box unlock is available
+        case levelUp          // star (yellow)     — you reached a new Hero level
+        case contentHidden    // warning (amber)   — a kudo was hidden (violated standards)
+        case badgeCollected   // shield (blue)     — you collected all badges
+        case reviewRequest    // pen (purple)      — admin: a kudo needs review
     }
 
     let id: String

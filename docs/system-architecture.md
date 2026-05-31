@@ -118,7 +118,7 @@ One ViewModel per screen. All `@Observable @MainActor final class`. Bound via `@
 ## Config
 
 - `SupabaseConfig` — REST base URL (`http://localhost:54321`), anon key (default CLI key, safe to commit for local dev), `restURL` helper.
-- `FeatureFlags` — compile-time flags; `isKudosAvailable: Bool` (default `true`) gates the Home Kudos section; `useMockAwards: Bool` (default `true`) gates Home awards data source (mock vs live REST); `useMockKudoData: Bool` (default `true`) gates Send Kudo recipients/hashtags/current-user + simulated submit (real `KudoService`/`UserService` path in `else` branch); `eventYear/Month/Day` constants drive `CountdownTimer` target date.
+- `FeatureFlags` — compile-time flags; `isKudosAvailable: Bool` (default `true`) gates the Home Kudos section; `useMockAwards: Bool` (default `true`) gates Home awards data source (mock vs live REST); `useMockKudoData: Bool` (default `true`) gates Send Kudo recipients/hashtags/current-user + simulated submit (real `KudoService`/`UserService` path in `else` branch); `useMockNotifications: Bool` (default `true`) gates Notifications screen mock data + local-only mark-read (real `NotificationService` path in `else` branch); `eventYear/Month/Day` constants drive `CountdownTimer` target date.
 
 ---
 
@@ -148,4 +148,7 @@ Track B (models, services, ViewModels, navigation) — complete, compiles on iOS
 Track A (UI screens) — complete (14 presentational SwiftUI screens + Home screen).  
 Phase 19 (integration) — complete; 13 container views wired, nav graph fully resolved, loading/error states handled.  
 Kudos board UI — Spotlight board, personal stats block, and Top-10 gift recipients sections added (+ header & hero); "Mở Secret Box" wired to router; mock data via `KudoService+Mock.swift`.  
+Notifications screen — mock data complete (`FeatureFlags.useMockNotifications = true`); 7 notification kinds with tap-to-mark-read and mark-all-read; `contentHidden` links to Community Standards; per-type deep navigation deferred.  
 App is UI-complete. Home awards load from mock data by default (`FeatureFlags.useMockAwards = true`); the live REST path exists but is not the default. Send Kudo screen is logic-complete on the mock path (`FeatureFlags.useMockKudoData = true`): validation, self-send guard, max-5-hashtags, cancel-confirm dialog, and success toast/pop are functional; rich-text toolbar, @mention, and image-upload remain visual-only. All other service methods are stubbed. Real data wiring is pending SDK installation.
+
+**UI scroll pattern (full-screen content screens):** `safeAreaInset(.top)` + background keyvisual + `toolbar(.hidden)` is the established pattern for screens that render a custom header with a background image extending behind the status bar. Applied to: `NotificationsView`, `CommunityStandardsView`, `RulesView`. The `.ignoresSafeArea(.top)` approach is deprecated for these screens.

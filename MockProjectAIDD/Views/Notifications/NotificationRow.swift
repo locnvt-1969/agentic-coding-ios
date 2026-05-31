@@ -2,17 +2,18 @@
 // MockProjectAIDD
 //
 // Single notification row — presentational only.
-// Design: Figma [iOS] Notifications / mms_B.1_Noti (unread) + Noti (read)
+// Design: Figma [iOS] Notifications / mms_B.1_Noti (7 types, each with its own icon/color).
 // Layout: 8pt padding, icon 24×24 pinned top, content block, optional unread dot.
-// Unread (mms_B.1_Noti): message weight 700, red dot 8×8 at trailing top.
-// Read   (Noti):          message weight 400, no dot.
-// Divider: 1pt #2E3940 at bottom.
+// Unread: message weight 700, red dot 8×8 trailing-top. Read: weight 400, no dot.
+// contentHidden type also shows an inline "Tiêu chuẩn cộng đồng →" link.
+// Icons are SF Symbol approximations; colors follow the spec text.
 
 import SwiftUI
 
 struct NotificationRow: View {
     let item: AppNotification
     let onTap: (AppNotification) -> Void
+    var onCommunityStandards: (() -> Void)? = nil
     var showsDivider: Bool = true
 
     // Static formatter — one instance for all rows.
@@ -55,7 +56,7 @@ struct NotificationRow: View {
             .foregroundStyle(item.kind.iconColor)
     }
 
-    // MARK: - Content: message + timestamp
+    // MARK: - Content: message + optional link + timestamp
 
     private var contentBlock: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -66,6 +67,21 @@ struct NotificationRow: View {
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
                 .multilineTextAlignment(.leading)
+
+            // Inline community-standards link (contentHidden type only)
+            if item.kind == .contentHidden {
+                Button(action: { onCommunityStandards?() }) {
+                    HStack(spacing: 4) {
+                        Text("Tiêu chuẩn cộng đồng")
+                            .font(.custom("Montserrat", size: 14).weight(.medium))
+                            .underline()
+                        Image(systemName: "arrow.up.right")
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
 
             Text(Self.relativeFormatter.localizedString(for: item.createdAt, relativeTo: Date()))
                 .font(.custom("Montserrat", size: 12).weight(.regular))
@@ -84,78 +100,50 @@ struct NotificationRow: View {
     }
 }
 
-// MARK: - Kind helpers
+// MARK: - Kind helpers (icons = SF Symbol approximations; colors per spec text)
 
 private extension AppNotification.Kind {
     var systemImageName: String {
         switch self {
-        case .kudoReceived:  return "envelope"
-        case .kudoReaction:  return "heart"
-        case .awardGranted:  return "star"
-        case .system:        return "exclamationmark.triangle"
+        case .kudoReceived:   return "envelope.fill"
+        case .kudoReaction:   return "heart.fill"
+        case .secretBox:      return "gift.fill"
+        case .levelUp:        return "star.fill"
+        case .contentHidden:  return "exclamationmark.triangle.fill"
+        case .badgeCollected: return "checkmark.seal.fill"
+        case .reviewRequest:  return "square.and.pencil"
         }
     }
 
     var iconColor: Color {
         switch self {
-        case .kudoReceived:  return Color(hex: "#4A9EE0")  // blue envelope
-        case .kudoReaction:  return Color(hex: "#E05E7A")  // pink heart
-        case .awardGranted:  return Color(hex: "#E8C84A")  // gold star
-        case .system:        return Color(hex: "#E8A44A")  // amber warning
+        case .kudoReceived:   return Color(hex: "#4A9EE0")  // blue envelope
+        case .kudoReaction:   return Color(hex: "#E05E7A")  // pink heart
+        case .secretBox:      return Color(hex: "#5BBF6A")  // green gift
+        case .levelUp:        return Color(hex: "#E8C84A")  // yellow star
+        case .contentHidden:  return Color(hex: "#E8A44A")  // amber warning
+        case .badgeCollected: return Color(hex: "#4A9EE0")  // blue shield
+        case .reviewRequest:  return Color(hex: "#9B6BD6")  // purple pen
         }
     }
 }
 
 // MARK: - Preview
 
-#Preview("NotificationRow") {
-    VStack(spacing: 0) {
-        NotificationRow(
-            item: AppNotification(
-                id: "n1",
-                kind: .kudoReceived,
-                actor: .sample,
-                message: "Sunner Huỳnh Dương Xuân Nhật vừa gửi đến bạn lời ghi nhận đầy yêu thương!",
-                createdAt: Date(timeIntervalSinceNow: -900),
-                isRead: false
-            ),
-            onTap: { _ in }
-        )
-        NotificationRow(
-            item: AppNotification(
-                id: "n2",
-                kind: .kudoReaction,
-                actor: .sample,
-                message: "Wow! Lời nhắn gửi của bạn cho Sunner <tên Sunner> vừa nhận thêm lượt tim!",
-                createdAt: Date(timeIntervalSinceNow: -3600),
-                isRead: true
-            ),
-            onTap: { _ in }
-        )
-        NotificationRow(
-            item: AppNotification(
-                id: "n3",
-                kind: .awardGranted,
-                actor: nil,
-                message: "Chúc mừng! Bạn vừa nhận được lượt mở Secret Box mới! Click vào đây để mở ngay nhé!",
-                createdAt: Date(timeIntervalSinceNow: -86400),
-                isRead: true
-            ),
-            onTap: { _ in }
-        )
-        NotificationRow(
-            item: AppNotification(
-                id: "n4",
-                kind: .system,
-                actor: nil,
-                message: "Tiếc quá! Bạn có một lời nhắn bị tạm ẩn vì \"vướng\" một số tiêu chuẩn! Hãy xem các tiêu chuẩn và gửi lại cho đồng đội nhé!\nTiêu chuẩn cộng đồng",
-                createdAt: Date(timeIntervalSinceNow: -2_592_000),
-                isRead: true
-            ),
-            onTap: { _ in },
-            showsDivider: false
-        )
+#Preview("All 7 types") {
+    ScrollView {
+        VStack(spacing: 0) {
+            ForEach(Array(NotificationsPreviewData.figmaSamples.enumerated()), id: \.element.id) { i, item in
+                NotificationRow(
+                    item: item,
+                    onTap: { _ in },
+                    onCommunityStandards: {},
+                    showsDivider: i < NotificationsPreviewData.figmaSamples.count - 1
+                )
+            }
+        }
+        .background(Color(hex: "#00070C").opacity(0.6))
+        .padding(.horizontal, 20)
     }
-    .background(Color(hex: "#00070C").opacity(0.6))
-    .padding(.horizontal, 20)
+    .background(Color.black)
 }

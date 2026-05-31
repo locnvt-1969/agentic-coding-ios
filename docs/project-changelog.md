@@ -2,6 +2,14 @@
 
 ## [Unreleased] — 2026-06-01
 
+### Added — Notifications screen: mock data + UI refinement
+
+- `FeatureFlags` — new `useMockNotifications: Bool` (default `true`); when true, `NotificationsViewModel` loads 7 mock notifications (one per `AppNotification.Kind`) and mark-read is local-only; real `NotificationService` path preserved in the `else` branch (3rd `useMock*` flag after `useMockAwards`, `useMockKudoData`)
+- `AppNotification.Kind` expanded 4 → 7: added `kudoReaction`, `secretBox`, `levelUp`, `contentHidden`, `badgeCollected`, `reviewRequest`; each kind has a distinct icon/color
+- `NotificationsView` refactored to `safeAreaInset(.top)` + background-keyvisual + `toolbar(.hidden)` scroll pattern (same as `CommunityStandardsView` / `RulesView`); the `.ignoresSafeArea(.top)` anti-pattern removed
+- Tap → mark read (`TC_NOTIF_FUN_001`), mark-all-read button (`FUN_002`), `contentHidden` inline link navigates to Community Standards
+- **Known follow-ups:** per-type deep navigation (e.g. open kudo from notification) deferred until API wiring
+
 ### Added — Community Standards screen: mock content + UI refinement
 
 - `ContentSection` — added optional `leadParagraph`, `numberedItems`, `bulletItems`, `highlight` fields (all defaulted; backward-compatible with existing Rules rendering)

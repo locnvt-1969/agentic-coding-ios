@@ -15,11 +15,16 @@ struct NotificationsContainer: View {
         NotificationsView(
             items: vm.items,
             isLoading: vm.isLoading,
-            onTap: { _ in
-                // TODO phase-19+: route per notification kind when deep-link targets are defined
+            onTap: { notification in
+                // Tap marks read (TC_NOTIF_FUN_001). Per-type deep navigation is deferred
+                // until those targets/API are wired.
+                Task { await vm.markRead(notification) }
             },
             onMarkAllRead: {
                 Task { await vm.markAllRead() }
+            },
+            onCommunityStandards: {
+                router.push(.communityStandards)
             },
             onBack: {
                 router.pop()
@@ -28,8 +33,14 @@ struct NotificationsContainer: View {
         .task {
             await vm.load()
         }
-        .alert("Lỗi", isPresented: .constant(vm.errorMessage != nil)) {
-            Button("OK") { vm.errorMessage = nil }
+        .alert(
+            "Lỗi",
+            isPresented: Binding(
+                get: { vm.errorMessage != nil },
+                set: { if !$0 { vm.errorMessage = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
         } message: {
             Text(vm.errorMessage ?? "")
         }

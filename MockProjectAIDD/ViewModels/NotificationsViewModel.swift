@@ -16,24 +16,36 @@ final class NotificationsViewModel {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
+        if FeatureFlags.useMockNotifications {
+            // Demo: bundled mock notifications (real API wired later).
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            items = NotificationsPreviewData.figmaSamples
+            unreadCount = items.filter { !$0.isRead }.count
+            return
+        }
         do {
             items = try await NotificationService.shared.listNotifications()
-            unreadCount = try await NotificationService.shared.unreadCount()
+            // Derive from items so the badge can't diverge from the list (avoids a stale
+            // second round-trip); swap to a dedicated count endpoint only if needed.
+            unreadCount = items.filter { !$0.isRead }.count
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
     func markRead(_ notification: AppNotification) async {
-        do {
-            try await NotificationService.shared.markRead(id: notification.id)
-            if let idx = items.firstIndex(where: { $0.id == notification.id }) {
-                items[idx].isRead = true
+        if !FeatureFlags.useMockNotifications {
+            do {
+                try await NotificationService.shared.markRead(id: notification.id)
+            } catch {
+                errorMessage = error.localizedDescription
+                return
             }
-            unreadCount = max(0, unreadCount - 1)
-        } catch {
-            errorMessage = error.localizedDescription
         }
+        if let idx = items.firstIndex(where: { $0.id == notification.id }) {
+            items[idx].isRead = true
+        }
+        unreadCount = items.filter { !$0.isRead }.count
     }
 
     func markAllRead() async {

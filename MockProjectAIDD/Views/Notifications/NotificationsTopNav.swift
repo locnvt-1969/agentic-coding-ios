@@ -1,9 +1,9 @@
 // NotificationsTopNav.swift
 // MockProjectAIDD
 //
-// Top navigation bar for the Notifications screen.
-// Design: dark gradient (#00101A → transparent, opacity 0.9) + back chevron + centered title.
-// Presentational only — onBack callback injected from parent.
+// Top navigation bar for the Notifications screen — designed to be pinned via
+// `.safeAreaInset(edge: .top)`. A 42pt row with a dark→transparent gradient that
+// bleeds up behind the status bar. Presentational only.
 
 import SwiftUI
 
@@ -11,38 +11,6 @@ struct NotificationsTopNav: View {
     var onBack: (() -> Void)? = nil
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            gradientBackground
-            navRow
-        }
-        .frame(maxWidth: .infinity, minHeight: 89)
-        .ignoresSafeArea(edges: .top)
-    }
-
-    // MARK: - Gradient
-
-    private var gradientBackground: some View {
-        LinearGradient(
-            stops: [
-                .init(color: Color(hex: "#00101A"),               location: 0.0000),
-                .init(color: Color(hex: "#00101A").opacity(0.30), location: 0.7644),
-                .init(color: Color(hex: "#00101A").opacity(0.20), location: 0.8462),
-                .init(color: Color(hex: "#00101A").opacity(0.15), location: 0.8870),
-                .init(color: Color(hex: "#00101A").opacity(0.10), location: 0.9279),
-                .init(color: Color(hex: "#00101A").opacity(0.05), location: 0.9639),
-                .init(color: Color(hex: "#00101A").opacity(0.00), location: 1.0000),
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .opacity(0.9)
-        .frame(maxWidth: .infinity)
-        .ignoresSafeArea(edges: .top)
-    }
-
-    // MARK: - Nav row
-
-    private var navRow: some View {
         HStack(spacing: 0) {
             Button(action: { onBack?() }) {
                 Image(systemName: "chevron.left")
@@ -64,12 +32,28 @@ struct NotificationsTopNav: View {
             // Mirror back button to keep title centered
             Color.clear.frame(width: 44, height: 42)
         }
+        .frame(height: 42)
         .frame(maxWidth: .infinity)
+        .background(gradientBackground.ignoresSafeArea(edges: .top))
+    }
+
+    private var gradientBackground: some View {
+        LinearGradient(
+            stops: [
+                .init(color: Color(hex: "#00101A"),               location: 0.0000),
+                .init(color: Color(hex: "#00101A").opacity(0.30), location: 0.7644),
+                .init(color: Color(hex: "#00101A").opacity(0.10), location: 0.9279),
+                .init(color: Color(hex: "#00101A").opacity(0.00), location: 1.0000),
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .opacity(0.9)
     }
 }
 
 #Preview {
-    ZStack {
+    ZStack(alignment: .top) {
         Color.black.ignoresSafeArea()
         NotificationsTopNav(onBack: {})
     }

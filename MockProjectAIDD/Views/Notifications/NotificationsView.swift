@@ -4,11 +4,9 @@
 // Notifications screen — presentational only.
 // Design: Figma [iOS] Notifications (fileKey: 9ypp4enmFmdK3YAFJLIu6C, screenId: _b68CBWKl5)
 //
-// Public contract:
-//   NotificationsView(items:isLoading:onTap:onMarkAllRead:onBack:)
-//
-// Layout: keyvisual BG → NotificationsTopNav → scrollable body
-//   body: "mark all read" row (unread-only) → notification list card | loading | empty
+// Layout mirrors CommunityStandardsView (commit 61ada84): a plain ScrollView whose content
+// respects the top safe area, the nav bar pinned via `.safeAreaInset(edge: .top)`, and the
+// keyvisual drawn via `.background`. Avoids the `.ignoresSafeArea(.top)` + scroll anti-pattern.
 
 import SwiftUI
 
@@ -17,34 +15,10 @@ struct NotificationsView: View {
     var isLoading: Bool = false
     let onTap: (AppNotification) -> Void
     let onMarkAllRead: () -> Void
+    var onCommunityStandards: (() -> Void)? = nil
     var onBack: (() -> Void)? = nil
 
     var body: some View {
-        ZStack(alignment: .top) {
-            keyvisualBackground
-            VStack(spacing: 0) {
-                NotificationsTopNav(onBack: onBack)
-                scrollBody
-            }
-        }
-        .ignoresSafeArea(edges: .top)
-        .navigationBarHidden(true)
-    }
-
-    // MARK: - Keyvisual background
-
-    private var keyvisualBackground: some View {
-        Image("notification_keyvisual_bg")
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .frame(maxWidth: .infinity)
-            .ignoresSafeArea()
-            .allowsHitTesting(false)
-    }
-
-    // MARK: - Scrollable body
-
-    private var scrollBody: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
                 if !isLoading && items.contains(where: { !$0.isRead }) {
@@ -55,6 +29,37 @@ struct NotificationsView: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 40)
         }
+        .background(alignment: .top) {
+            keyvisualBackground
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            NotificationsTopNav(onBack: onBack)
+        }
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    // MARK: - Keyvisual background
+
+    private var keyvisualBackground: some View {
+        ZStack {
+            Color(hex: "#00101A")
+            Image("notification_keyvisual_bg")
+                .resizable()
+                .scaledToFill()
+                .frame(maxWidth: .infinity)
+                .clipped()
+            LinearGradient(
+                stops: [
+                    .init(color: Color(hex: "#00101A").opacity(0), location: 0),
+                    .init(color: Color(hex: "#00101A"),            location: 0.5)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+        .frame(maxWidth: .infinity)
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
     }
 
     // MARK: - "Mark all read" button
@@ -97,6 +102,7 @@ struct NotificationsView: View {
                 NotificationRow(
                     item: item,
                     onTap: onTap,
+                    onCommunityStandards: onCommunityStandards,
                     showsDivider: index < items.count - 1
                 )
             }
@@ -144,22 +150,26 @@ struct NotificationsView: View {
 // MARK: - Previews
 
 #Preview("Populated (mix read/unread)") {
-    NotificationsView(
-        items: NotificationsPreviewData.figmaSamples,
-        isLoading: false,
-        onTap: { _ in },
-        onMarkAllRead: {},
-        onBack: {}
-    )
-    .background(Color.black)
+    NavigationStack {
+        NotificationsView(
+            items: NotificationsPreviewData.figmaSamples,
+            isLoading: false,
+            onTap: { _ in },
+            onMarkAllRead: {},
+            onCommunityStandards: {},
+            onBack: {}
+        )
+    }
 }
 
 #Preview("Loading") {
-    NotificationsView(items: [], isLoading: true, onTap: { _ in }, onMarkAllRead: {}, onBack: {})
-        .background(Color.black)
+    NavigationStack {
+        NotificationsView(items: [], isLoading: true, onTap: { _ in }, onMarkAllRead: {}, onBack: {})
+    }
 }
 
 #Preview("Empty") {
-    NotificationsView(items: [], isLoading: false, onTap: { _ in }, onMarkAllRead: {}, onBack: {})
-        .background(Color.black)
+    NavigationStack {
+        NotificationsView(items: [], isLoading: false, onTap: { _ in }, onMarkAllRead: {}, onBack: {})
+    }
 }

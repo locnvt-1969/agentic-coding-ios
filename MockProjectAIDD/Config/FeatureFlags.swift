@@ -19,6 +19,10 @@ enum FeatureFlags {
     /// Flip to false once the Kudos backend is wired.
     static let useMockKudoData: Bool = true
 
+    /// When true (demo mode), the Notifications screen loads bundled mock notifications
+    /// instead of calling NotificationService. Flip to false once the backend is wired.
+    static let useMockNotifications: Bool = true
+
     // MARK: - SAA 2025 countdown target (Asia/Saigon)
     //
     // Real event date is 2025-12-26. The demo target below is set forward so the countdown
