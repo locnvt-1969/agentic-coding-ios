@@ -10,10 +10,10 @@ import SwiftUI
 // MARK: - SendKudoFormCard
 
 struct SendKudoFormCard: View {
-    // Recipient
+    // Recipient (single per kudo)
     let availableRecipients: [User]
-    let recipients: [User]
-    var onAddRecipient: (User) -> Void
+    let selectedRecipient: User?
+    var onSelectRecipient: (User) -> Void
 
     // Award (danh hiệu) — uses same search-field style
     @Binding var awardText: String
@@ -27,6 +27,9 @@ struct SendKudoFormCard: View {
     var onAddHashtag: (Hashtag) -> Void
     var onRemoveHashtag: (Hashtag) -> Void
 
+    // Awards info / community standards link (spec B.5)
+    var onCommunityStandards: () -> Void
+
     // Anonymous
     @Binding var isAnonymous: Bool
 
@@ -36,7 +39,6 @@ struct SendKudoFormCard: View {
     // Dropdown state — owned here as local UI state
     @State private var showRecipientDropdown = false
     @State private var showHashtagDropdown = false
-    @State private var recipientQuery = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -47,18 +49,18 @@ struct SendKudoFormCard: View {
                 .foregroundStyle(Color.kudosDark)
                 .frame(maxWidth: .infinity, alignment: .center)
 
-            // Người nhận field
+            // Người nhận field — shows the chosen recipient's name; tap opens the picker.
             SendKudoFieldRow(label: "Người nhận", isRequired: true) {
                 SendKudoSearchField(
                     placeholder: "Tìm kiếm",
-                    text: $recipientQuery,
+                    text: .constant(selectedRecipient?.name ?? ""),
                     onTap: { showRecipientDropdown = true }
                 )
             }
 
-            // Danh hiệu field
+            // Danh hiệu field — editable text input (spec B.4)
             SendKudoFieldRow(label: "Danh hiệu", isRequired: true) {
-                SendKudoSearchField(
+                SendKudoTextField(
                     placeholder: "Dành tặng một danh hiệu cho...",
                     text: $awardText
                 )
@@ -70,6 +72,17 @@ struct SendKudoFormCard: View {
                 .fontWeight(.regular)
                 .foregroundStyle(Color.kudosMuted)
                 .lineSpacing(4)
+
+            // mms_B.5 — Awards info / community standards link (spec B.5)
+            Button(action: onCommunityStandards) {
+                Text("Tiêu chuẩn cộng đồng")
+                    .font(.custom("Montserrat", size: 12))
+                    .fontWeight(.medium)
+                    .underline()
+                    .foregroundStyle(Color.kudosDark)
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             // Message text area
             SendKudoMessageField(message: $message)
@@ -87,11 +100,6 @@ struct SendKudoFormCard: View {
 
             // Anonymous toggle
             SendKudoAnonymousRow(isAnonymous: $isAnonymous)
-
-            // Second recipient chips row (shows selected recipients)
-            if !recipients.isEmpty {
-                SendKudoSelectedRecipients(recipients: recipients)
-            }
 
             // Validation error
             if let error = validationError {
@@ -113,9 +121,8 @@ struct SendKudoFormCard: View {
                 SendKudoRecipientDropdown(
                     items: availableRecipients,
                     onSelect: { user in
-                        onAddRecipient(user)
+                        onSelectRecipient(user)
                         showRecipientDropdown = false
-                        recipientQuery = ""
                     },
                     onDismiss: { showRecipientDropdown = false }
                 )

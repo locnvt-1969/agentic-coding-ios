@@ -2,6 +2,14 @@
 
 ## [Unreleased] — 2026-06-01
 
+### Added — Send/Write Kudo screen logic (mock data path)
+
+- `FeatureFlags` — new `useMockKudoData: Bool` (default `true`); when true, `SendKudoViewModel` loads mock recipients/hashtags/current-user and simulates submit; real `KudoService`/`UserService` path is preserved in the `else` branch
+- `SendKudoMockData.swift` (`Views/Kudos/`) — bundled mock recipients, hashtags, current-user
+- `KudoService.SendKudoPayload` — added `title` field
+- `SendKudoViewModel` — title wiring, self-send guard (spec B.2), max-5-hashtags cap, full validation (recipient + title + message + ≥1 hashtag), simulated submit success; rich-text toolbar / @mention / image-upload remain visual-only
+- `SendKudoContainer` — cancel-confirm dialog (spec H), "Community Standards" link wired (spec B.5), success toast + pop navigation on submit (TC_WRITE_FUN_001)
+
 ### Changed — Home screen logic wired to develop3 architecture
 
 - `FeatureFlags` — added `useMockAwards` flag (default `true`) + `eventYear/Month/Day` countdown date constants (demo 2026-06-28; real event 2025-12-26)

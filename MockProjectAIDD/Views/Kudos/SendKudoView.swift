@@ -15,8 +15,8 @@ import SwiftUI
 // MARK: - SendKudoView
 
 struct SendKudoView: View {
-    // Recipients
-    let recipients: [User]
+    // Recipient (single per kudo)
+    let selectedRecipient: User?
     let availableRecipients: [User]
 
     // Hashtags
@@ -24,7 +24,7 @@ struct SendKudoView: View {
     let availableHashtags: [Hashtag]
 
     // Bound fields
-    @Binding var awardText: String  // Parent/VM owns awardText; wired into SendKudoPayload during phase-19 integration.
+    @Binding var awardText: String  // Danh hiệu (title) — bound to SendKudoViewModel.title by the container.
     @Binding var message: String
     @Binding var isAnonymous: Bool
 
@@ -32,9 +32,10 @@ struct SendKudoView: View {
     let validationError: String?
 
     // Callbacks
-    var onAddRecipient: (User) -> Void
+    var onSelectRecipient: (User) -> Void
     var onAddHashtag: (Hashtag) -> Void
     var onRemoveHashtag: (Hashtag) -> Void
+    var onCommunityStandards: () -> Void
     var onSubmit: () -> Void
     var onCancel: () -> Void
 
@@ -53,14 +54,15 @@ struct SendKudoView: View {
                     VStack(spacing: 24) {
                         SendKudoFormCard(
                             availableRecipients: availableRecipients,
-                            recipients: recipients,
-                            onAddRecipient: onAddRecipient,
+                            selectedRecipient: selectedRecipient,
+                            onSelectRecipient: onSelectRecipient,
                             awardText: $awardText,
                             message: $message,
                             selectedHashtags: selectedHashtags,
                             availableHashtags: availableHashtags,
                             onAddHashtag: onAddHashtag,
                             onRemoveHashtag: onRemoveHashtag,
+                            onCommunityStandards: onCommunityStandards,
                             isAnonymous: $isAnonymous,
                             validationError: validationError
                         )
@@ -172,22 +174,22 @@ private let _previewRecipients = [
 
 #Preview("Default state") {
     SendKudoView(
-        recipients: [], availableRecipients: _previewRecipients,
+        selectedRecipient: nil, availableRecipients: _previewRecipients,
         selectedHashtags: [], availableHashtags: _previewHashtags,
         awardText: .constant(""), message: .constant(""), isAnonymous: .constant(false),
         validationError: nil,
-        onAddRecipient: { _ in }, onAddHashtag: { _ in }, onRemoveHashtag: { _ in },
-        onSubmit: {}, onCancel: {}
+        onSelectRecipient: { _ in }, onAddHashtag: { _ in }, onRemoveHashtag: { _ in },
+        onCommunityStandards: {}, onSubmit: {}, onCancel: {}
     )
 }
 
 #Preview("Validation error state") {
     SendKudoView(
-        recipients: [], availableRecipients: [],
+        selectedRecipient: nil, availableRecipients: [],
         selectedHashtags: [_previewHashtags[0]], availableHashtags: _previewHashtags,
         awardText: .constant(""), message: .constant(""), isAnonymous: .constant(false),
-        validationError: "Bạn cần điền đủ Người nhận, Lời nhắn gửi và Hashtag để gửi Kudos!",
-        onAddRecipient: { _ in }, onAddHashtag: { _ in }, onRemoveHashtag: { _ in },
-        onSubmit: {}, onCancel: {}
+        validationError: "Bạn cần điền đủ Người nhận, Danh hiệu, Lời nhắn và Hashtag để gửi Kudos!",
+        onSelectRecipient: { _ in }, onAddHashtag: { _ in }, onRemoveHashtag: { _ in },
+        onCommunityStandards: {}, onSubmit: {}, onCancel: {}
     )
 }

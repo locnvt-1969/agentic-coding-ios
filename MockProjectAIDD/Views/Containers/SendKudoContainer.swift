@@ -2,15 +2,13 @@
 // MockProjectAIDD
 //
 // Container: wires SendKudoViewModel → SendKudoView.
-// awardText is held locally — SendKudoViewModel has no awardText property.
-// TODO phase-19+: wire awardText into SendKudoPayload/VM when the VM adds support.
-// Phase-19 integration.
+// Mock recipients/hashtags + simulated submit under FeatureFlags.useMockKudoData.
 
 import SwiftUI
 
 struct SendKudoContainer: View {
     @State private var vm = SendKudoViewModel()
-    @State private var awardText = ""
+    @State private var showCancelConfirm = false
     @EnvironmentObject private var router: AppRouter
 
     var body: some View {
@@ -18,39 +16,47 @@ struct SendKudoContainer: View {
         // the live @State instance — avoids divergence on struct re-init.
         @Bindable var vm = vm
         SendKudoView(
-            recipients: vm.recipients,
+            selectedRecipient: vm.selectedRecipient,
             availableRecipients: vm.availableRecipients,
             selectedHashtags: vm.selectedHashtags,
             availableHashtags: vm.availableHashtags,
-            awardText: $awardText,
+            awardText: $vm.title,          // Danh hiệu → kudo title
             message: $vm.message,
             isAnonymous: $vm.isAnonymous,
             validationError: vm.validationError,
-            onAddRecipient: { user in
-                if !vm.recipients.contains(where: { $0.id == user.id }) {
-                    vm.recipients.append(user)
-                }
-            },
-            onAddHashtag: { hashtag in
-                if !vm.selectedHashtags.contains(where: { $0.id == hashtag.id }) {
-                    vm.selectedHashtags.append(hashtag)
-                }
-            },
-            onRemoveHashtag: { hashtag in
-                vm.selectedHashtags.removeAll { $0.id == hashtag.id }
-            },
+            onSelectRecipient: { vm.selectRecipient($0) },
+            onAddHashtag: { vm.addHashtag($0) },
+            onRemoveHashtag: { vm.removeHashtag($0) },
+            onCommunityStandards: { router.push(.communityStandards) },
             onSubmit: {
                 Task {
                     await vm.submit()
-                    if vm.didSend { router.pop() }
+                    if vm.didSend {
+                        ToastCenter.shared.show("Gửi Kudo thành công")
+                        router.pop()
+                    }
                 }
             },
             onCancel: {
-                router.pop()
+                if vm.hasUnsavedContent {
+                    showCancelConfirm = true
+                } else {
+                    router.pop()
+                }
             }
         )
         .task {
             await vm.loadOptions()
+        }
+        .confirmationDialog(
+            "Huỷ viết Kudo?",
+            isPresented: $showCancelConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Thoát, không lưu", role: .destructive) { router.pop() }
+            Button("Tiếp tục viết", role: .cancel) {}
+        } message: {
+            Text("Nội dung chưa gửi sẽ bị mất.")
         }
         .alert(
             "Lỗi",

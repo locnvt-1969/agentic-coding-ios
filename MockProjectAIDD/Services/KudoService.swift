@@ -31,7 +31,8 @@ struct KudoFilter: Hashable {
 
 /// Payload for composing a kudo (Track A SendKudo view binds to this).
 struct SendKudoPayload: Hashable {
-    var recipients: [User]
+    var recipient: User
+    var title: String
     var message: String
     var hashtags: [Hashtag]
     var isAnonymous: Bool

@@ -14,6 +14,11 @@ enum FeatureFlags {
     /// Supabase REST API. Flip to false once the Supabase backend is wired and running.
     static let useMockAwards: Bool = true
 
+    /// When true (demo mode), the Send/Write Kudo screen uses bundled mock recipients,
+    /// hashtags and current user, and simulates submit success instead of calling KudoService.
+    /// Flip to false once the Kudos backend is wired.
+    static let useMockKudoData: Bool = true
+
     // MARK: - SAA 2025 countdown target (Asia/Saigon)
     //
     // Real event date is 2025-12-26. The demo target below is set forward so the countdown

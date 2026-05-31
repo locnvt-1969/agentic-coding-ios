@@ -112,7 +112,7 @@ One ViewModel per screen. All `@Observable @MainActor final class`. Bound via `@
 ## Config
 
 - `SupabaseConfig` — REST base URL (`http://localhost:54321`), anon key (default CLI key, safe to commit for local dev), `restURL` helper.
-- `FeatureFlags` — compile-time flags; `isKudosAvailable: Bool` (default `true`) gates the Home Kudos section; `useMockAwards: Bool` (default `true`) gates Home awards data source (mock vs live REST); `eventYear/Month/Day` constants drive `CountdownTimer` target date.
+- `FeatureFlags` — compile-time flags; `isKudosAvailable: Bool` (default `true`) gates the Home Kudos section; `useMockAwards: Bool` (default `true`) gates Home awards data source (mock vs live REST); `useMockKudoData: Bool` (default `true`) gates Send Kudo recipients/hashtags/current-user + simulated submit (real `KudoService`/`UserService` path in `else` branch); `eventYear/Month/Day` constants drive `CountdownTimer` target date.
 
 ---
 
@@ -141,4 +141,4 @@ Seed data: `supabase/seeds/awards.sql` (3 rows: Top Talent, Top Project, Top Man
 Track B (models, services, ViewModels, navigation) — complete, compiles on iOS 26.2 sim.  
 Track A (UI screens) — complete (14 presentational SwiftUI screens + Home screen).  
 Phase 19 (integration) — complete; 13 container views wired, nav graph fully resolved, loading/error states handled.  
-App is UI-complete. Home awards load from mock data by default (`FeatureFlags.useMockAwards = true`); the live REST path exists but is not the default. All other service methods are stubbed. Real data wiring is pending SDK installation.
+App is UI-complete. Home awards load from mock data by default (`FeatureFlags.useMockAwards = true`); the live REST path exists but is not the default. Send Kudo screen is logic-complete on the mock path (`FeatureFlags.useMockKudoData = true`): validation, self-send guard, max-5-hashtags, cancel-confirm dialog, and success toast/pop are functional; rich-text toolbar, @mention, and image-upload remain visual-only. All other service methods are stubbed. Real data wiring is pending SDK installation.

@@ -80,3 +80,38 @@ struct SendKudoSearchField: View {
         .buttonStyle(.plain)
     }
 }
+
+// MARK: - SendKudoTextField
+
+/// Editable single-line text input matching the search-field styling (no magnifier).
+/// Used for the "Danh hiệu" (title) field — spec B.4 (text_form, editable).
+struct SendKudoTextField: View {
+    let placeholder: String
+    @Binding var text: String
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            if text.isEmpty {
+                Text(placeholder)
+                    .font(.custom("Montserrat", size: 12))
+                    .foregroundStyle(Color.kudosMuted)
+                    .lineLimit(1)
+                    .allowsHitTesting(false)
+            }
+            TextField("", text: $text)
+                .font(.custom("Montserrat", size: 12))
+                .foregroundStyle(Color.kudosDark)
+                .tint(Color.kudosDark)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 10.72)
+        .padding(.vertical, 7.15)
+        .frame(width: 210, height: 40)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 3.574))
+        .overlay(
+            RoundedRectangle(cornerRadius: 3.574)
+                .stroke(Color.kudosBorderMuted, lineWidth: 0.447)
+        )
+    }
+}

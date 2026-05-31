@@ -4,7 +4,6 @@
 // Auxiliary rows for the Send Kudo compose form:
 //   - SendKudoImageRow      — static image upload strip (presentational)
 //   - SendKudoAnonymousRow  — anonymous toggle (checkbox style from Figma)
-//   - SendKudoSelectedRecipients — chips for confirmed recipients
 //
 // Design source: screen 7fFAb-K35a (default state).
 // All values sourced from Figma — no guessing.
@@ -112,48 +111,6 @@ struct SendKudoAnonymousRow: View {
     }
 }
 
-// MARK: - SendKudoSelectedRecipients
-
-/// Shows confirmed recipient chips below the anonymous row (second "recipient" frame
-/// visible in screens PV7jBVZU1N and 0le8xKnFE_). Each chip: name text in a bordered
-/// pill, same style as hashtag chips but for User names.
-struct SendKudoSelectedRecipients: View {
-    let recipients: [User]
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 8) {
-            // Leading label column matching other rows
-            Text("Người nhận")
-                .font(.custom("Montserrat", size: 14))
-                .fontWeight(.medium)
-                .foregroundStyle(Color.kudosDark)
-                .frame(width: 94, alignment: .leading)
-
-            // Recipient name chips
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 4) {
-                    ForEach(recipients) { user in
-                        Text(user.name)
-                            .font(.custom("Montserrat", size: 12))
-                            .fontWeight(.regular)
-                            .foregroundStyle(Color.kudosBorderMuted)
-                            .lineLimit(1)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(Color.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 3.574))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 3.574)
-                                    .stroke(Color.kudosBorderMuted, lineWidth: 0.447)
-                            )
-                    }
-                }
-            }
-        }
-        .frame(height: 40)
-    }
-}
-
 // MARK: - Previews
 
 #Preview("ImageRow") {
@@ -166,13 +123,4 @@ struct SendKudoSelectedRecipients: View {
     SendKudoAnonymousRow(isAnonymous: .constant(false))
         .padding()
         .background(Color.kudosBackground)
-}
-
-#Preview("SelectedRecipients") {
-    SendKudoSelectedRecipients(recipients: [
-        User(id: "u1", name: "Dương Huỳnh Xuân Nhật", departmentName: "CECV1"),
-        User(id: "u2", name: "Nguyễn Văn A", departmentName: "OPD")
-    ])
-    .padding()
-    .background(Color.kudosBackground)
 }
