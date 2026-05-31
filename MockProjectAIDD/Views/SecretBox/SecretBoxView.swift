@@ -21,6 +21,9 @@ struct SecretBoxView: View {
     let reward: Gift?
     let onOpen: () -> Void
 
+    // Called when the user taps the back chevron; nil = no-op (preview default)
+    var onBack: (() -> Void)? = nil
+
     // Sample box count — presentational; real count injected by parent
     var boxCount: Int = 5
 
@@ -65,7 +68,7 @@ struct SecretBoxView: View {
             // Nav content row
             HStack(spacing: 0) {
                 // Back chevron area (Figma: 130×42, padding 7px left)
-                Button(action: {}) {
+                Button(action: { onBack?() }) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundStyle(Color.secretBoxBodyText)

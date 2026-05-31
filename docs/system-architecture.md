@@ -7,16 +7,35 @@
 ## Layer Overview
 
 ```
-App/           AppRouter — single source of truth for navigation
-Config/        SupabaseConfig, AppConstants
-Models/        Pure Swift structs/enums (no business logic)
-Services/      @MainActor singletons — all Supabase calls; typed LocalizedError enums
-ViewModels/    @Observable @MainActor — state + calls to Services
-Views/         SwiftUI views grouped by feature — presentational only, no service calls
-Extensions/    Shared Swift extensions (Color+Hex, etc.)
+App/                AppRouter — single source of truth for navigation
+Config/             SupabaseConfig, AppConstants
+Models/             Pure Swift structs/enums (no business logic)
+Services/           @MainActor singletons — all Supabase calls; typed LocalizedError enums
+ViewModels/         @Observable @MainActor — state + calls to Services
+Views/
+  Containers/       Composition roots — own @State ViewModel, map state → presentational view,
+                    dispatch actions, route via AppRouter (see §Container Layer)
+  <Feature>/        Presentational SwiftUI views — props/callbacks only, no ViewModel or service imports
+  Shared/           MainTabView (tab roots), NavDestinationResolver, shared components
+Extensions/         Shared Swift extensions (Color+Hex, etc.)
 ```
 
-Pattern: **MVVM + Router + Service**
+Pattern: **MVVM + Container + Router + Service**
+
+---
+
+## Container Layer
+
+Introduced in phase 19. Each `*Container` in `Views/Containers/` is the single composition root for one screen:
+
+- Owns an `@State private var vm = <Feature>ViewModel()` — ViewModel lifetime is tied to the container.
+- Reads ViewModel state and maps it to the presentational view's props.
+- Handles callbacks by calling ViewModel methods or pushing to `AppRouter.path`.
+- Surfaces loading/error states via shared `ContainerErrorView`.
+
+`MainTabView` places the three tab-root containers (`KudosBoardContainer`, `NotificationsContainer`, `ProfileSelfContainer`) and registers a single `navigationDestination(for: NavDestination.self)` block that delegates to `NavDestinationResolver` — a private view that switches over all `NavDestination` cases and returns the appropriate container.
+
+Presentational views (`Views/<Feature>/`) remain dumb: they accept typed props and fire callbacks; they never import a ViewModel or Service.
 
 ---
 
@@ -79,4 +98,5 @@ One ViewModel per screen. All `@Observable @MainActor final class`. Bound via `@
 
 Track B (models, services, ViewModels, navigation) — complete, compiles on iOS 26.2 sim.  
 Track A (UI screens) — complete (14 presentational SwiftUI screens).  
-Supabase integration — stubbed; all service methods return empty/throw placeholder errors.
+Phase 19 (integration) — complete; 13 container views wired, nav graph fully resolved, loading/error states handled.  
+App is UI-complete. Supabase integration — stubbed; all service methods return empty/throw placeholder errors. Real data wiring is pending SDK installation.

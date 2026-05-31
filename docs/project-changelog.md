@@ -44,6 +44,23 @@
 **Reusable components introduced:**
 - `KudoCard`, `FilterOverlay`, profile sub-views (`ProfileHeaderView`, `ProfileStatsView`, `ProfileTabsView`), `ProfileBadgeSlot`, `AwardVariantStyle`
 
+### Added — Phase 19: Integration (iOS plan complete)
+
+**Container layer** (`Views/Containers/`, 13 files)
+- One `*Container` per screen: owns `@Observable` ViewModel via `@State`, maps VM state → presentational view props, dispatches actions, routes via `AppRouter`
+- Containers: `KudosBoardContainer`, `AllKudosContainer`, `ViewKudoContainer`, `SendKudoContainer`, `SearchSunnerContainer`, `NotificationsContainer`, `ProfileSelfContainer`, `ProfileOtherContainer`, `AwardDetailContainer`, `SecretBoxContainer`, `CommunityStandardsContainer`, `RulesContainer`
+- Shared `ContainerErrorView` for loading/empty/error states across all screens
+
+**Navigation graph wired**
+- `MainTabView` updated: tab roots use containers (`KudosBoardContainer`, `NotificationsContainer`, `ProfileSelfContainer`)
+- `NavDestinationResolver` (private, in `MainTabView`) resolves all `NavDestination` cases to the correct container
+- `ErrorView` route wired via `AppRoute.error(AppErrorKind)`
+
+**ViewModel additions**
+- `ProfileViewModel`: kudos count, awards count fields
+- `SecretBoxView`: `onBack` callback added
+
+**Plan status:** entire iOS Sun* Kudos app plan complete (Track B backbone + 14 Track A screens + phase 19 integration)
+
 ### Pending
-- Supabase SDK wiring (all service methods currently stubbed)
-- Phase 19: Track A + Track B integration (wire ViewModels/services into presentational screens)
+- Supabase SDK wiring (all service methods currently stubbed; real data is future work)

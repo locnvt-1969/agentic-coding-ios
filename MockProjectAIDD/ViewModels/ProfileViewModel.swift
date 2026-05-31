@@ -9,6 +9,10 @@ import SwiftUI
 final class ProfileViewModel {
     var user: User?
     var awards: [Award] = []
+    var kudos: [Kudo] = []
+    var kudosReceivedCount = 0
+    // TODO: real sent/received split when API lands
+    var kudosSentCount = 0
     var isLoading = false
     var errorMessage: String?
 
@@ -26,6 +30,8 @@ final class ProfileViewModel {
             }
             user = loaded
             awards = try await AwardService.shared.fetchAwards(userId: loaded.id)
+            kudos = (try? await KudoService.shared.listAllKudos()) ?? []
+            kudosReceivedCount = kudos.count
         } catch {
             errorMessage = error.localizedDescription
         }
