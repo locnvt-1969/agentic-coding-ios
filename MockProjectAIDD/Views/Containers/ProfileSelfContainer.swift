@@ -15,12 +15,9 @@ struct ProfileSelfContainer: View {
             if let user = vm.user {
                 ProfileSelfView(
                     user: user,
-                    awards: vm.awards,
+                    stats: vm.stats,
                     onEdit: {
-                        // TODO phase-19+: wire edit profile navigation when screen exists
-                    },
-                    onOpenAward: { type in
-                        router.push(.awardDetail(type: type))
+                        // TODO: wire edit-profile navigation when that screen exists
                     },
                     kudos: vm.kudos,
                     kudosReceivedCount: vm.kudosReceivedCount,
@@ -29,7 +26,7 @@ struct ProfileSelfContainer: View {
                         router.push(.secretBox)
                     },
                     onCopyKudoLink: { _ in
-                        // TODO phase-19+: implement kudo link copy via pasteboard
+                        // TODO: implement kudo link copy via pasteboard
                     },
                     onViewKudoDetail: { kudo in
                         router.push(.viewKudo(id: kudo.id))

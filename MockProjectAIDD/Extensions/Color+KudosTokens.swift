@@ -17,4 +17,5 @@ extension Color {
     static let kudosAccent     = Color(hex: "FFEA9E")
     static let kudosBorderMuted = Color(hex: "998C5F")
     static let kudosOverlayBg  = Color(hex: "00070C")
+    static let kudosSpamBg     = Color(hex: "F5A623")  // "Spam" badge — orange (inferred from design image)
 }

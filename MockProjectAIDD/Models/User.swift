@@ -12,6 +12,8 @@ struct User: Identifiable, Hashable, Codable {
     let level: String?
     /// Award types this user has earned (drives profile badges/awards strip).
     let awardTypes: [AwardType]
+    /// Sun* value icons collected through Secret Boxes (drives the profile icon collection).
+    let collectedValueIcons: [SunValueIcon]
 
     init(
         id: String,
@@ -20,7 +22,8 @@ struct User: Identifiable, Hashable, Codable {
         departmentName: String? = nil,
         role: String? = nil,
         level: String? = nil,
-        awardTypes: [AwardType] = []
+        awardTypes: [AwardType] = [],
+        collectedValueIcons: [SunValueIcon] = []
     ) {
         self.id = id
         self.name = name
@@ -29,6 +32,7 @@ struct User: Identifiable, Hashable, Codable {
         self.role = role
         self.level = level
         self.awardTypes = awardTypes
+        self.collectedValueIcons = collectedValueIcons
     }
 
     static let sample = User(

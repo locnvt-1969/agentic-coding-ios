@@ -1,22 +1,19 @@
 // ProfileOtherView.swift
 // MockProjectAIDD
 //
-// Root composer for "Profile người khác" (other-user profile) screen — phase 09.
+// Root composer for "Profile người khác" (other-user profile) screen.
 // Reuses: ProfileHeader, ProfileBadges, ProfileKudosSection (via thin composition).
-// New: ProfileSendKudoButton replaces the edit pencil; no stats card shown.
+// New vs self: ProfileSendKudoButton replaces the edit pencil; no stats card shown.
 // Presentational only — no service calls, no ViewModel ownership.
 //
-// Public contract:
-//   ProfileOtherView(user:awards:onSendKudo:onOpenAward:
-//                    kudos:kudosReceivedCount:onCopyKudoLink:onViewKudoDetail:)
+//   ProfileOtherView(user:onSendKudo:kudos:kudosReceivedCount:
+//                    onCopyKudoLink:onViewKudoDetail:)
 
 import SwiftUI
 
 struct ProfileOtherView: View {
     let user: User
-    let awards: [Award] // Reserved for phase-19 symmetry; badges render from user.awardTypes.
     var onSendKudo: () -> Void = {}
-    var onOpenAward: (AwardType) -> Void = { _ in }
 
     // Kudos — other-user profile shows received kudos only (read-only filter)
     var kudos: [Kudo] = []
@@ -36,15 +33,15 @@ struct ProfileOtherView: View {
                     // 1. Header — keyvisual BG + avatar + name (reused as-is)
                     ProfileHeader(user: user)
 
-                    // 2. Badge collection (reused as-is)
+                    // 2. Icon collection (other → filled + "của {name}")
                     ProfileBadges(
-                        awardTypes: user.awardTypes,
-                        onOpenAward: onOpenAward
+                        valueIcons: user.collectedValueIcons,
+                        collectionOwnerName: user.name
                     )
-                    .padding(.horizontal, 57)
+                    .padding(.horizontal, 12)
                     .padding(.top, 24)
 
-                    // 3. Send Kudo CTA (NEW — replaces edit button / no stats card)
+                    // 3. Send Kudo CTA (replaces edit button / no stats card)
                     ProfileSendKudoButton(
                         recipientName: user.name,
                         onTap: onSendKudo
@@ -81,7 +78,7 @@ struct ProfileOtherView: View {
         departmentName: "CEVC3",
         role: "Engineer",
         level: "Rising Hero",
-        awardTypes: [.mvp, .topTalent]
+        collectedValueIcons: SunValueIcon.allCases
     )
 
     let sampleKudo = Kudo(
@@ -101,9 +98,7 @@ struct ProfileOtherView: View {
 
     ProfileOtherView(
         user: sampleUser,
-        awards: [],
         onSendKudo: {},
-        onOpenAward: { _ in },
         kudos: [sampleKudo, sampleKudo, sampleKudo],
         kudosReceivedCount: 5,
         onCopyKudoLink: { _ in },

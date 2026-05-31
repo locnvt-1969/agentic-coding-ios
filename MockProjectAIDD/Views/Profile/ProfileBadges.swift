@@ -1,23 +1,23 @@
 // ProfileBadges.swift
 // MockProjectAIDD
 //
-// Presentational badges/huy-hiệu strip — "Bộ sưu tập icon của tôi".
-// Driven by [AwardType] from User. Reusable by phase-09.
-// Design: mms_2_icon collection — 6 circular badge slots, label below.
+// Presentational "Bộ sưu tập icon" strip — 6 Sun* value-icon slots + owner label.
+// Driven by [SunValueIcon] collected by the user. Display-only (no navigation):
+// self profile shows empty circles, other-user profile shows filled icons + names.
+// Design: mms_2_icon collection. Assets: rules_icon_* (Momorph/Content).
 
 import SwiftUI
 
 // MARK: - ProfileBadges
 
 struct ProfileBadges: View {
-    /// Award types the user has earned (up to 6 shown).
-    let awardTypes: [AwardType]
-    /// Called when user taps a badge slot that has an award.
-    var onOpenAward: (AwardType) -> Void = { _ in }
+    /// Value icons the user has collected (rendered left-to-right, up to 6).
+    let valueIcons: [SunValueIcon]
+    /// Owner name for the section label. `nil` → "của tôi" (self profile).
+    var collectionOwnerName: String? = nil
 
     private let maxSlots = 6
-    private let badgeSize: CGFloat = 32
-    private let badgeSpacing: CGFloat = 14
+    private let badgeSize: CGFloat = 44
 
     var body: some View {
         VStack(spacing: 12) {
@@ -29,16 +29,13 @@ struct ProfileBadges: View {
     // MARK: Badge row
 
     private var badgeRow: some View {
-        HStack(spacing: badgeSpacing) {
+        HStack(alignment: .top, spacing: 4) {
             ForEach(0..<maxSlots, id: \.self) { index in
-                if index < awardTypes.count {
-                    let awardType = awardTypes[index]
-                    ProfileBadgeSlot(awardType: awardType, size: badgeSize) {
-                        onOpenAward(awardType)
-                    }
-                } else {
-                    ProfileBadgeSlot(awardType: nil, size: badgeSize)
-                }
+                ProfileValueIconSlot(
+                    icon: index < valueIcons.count ? valueIcons[index] : nil,
+                    size: badgeSize
+                )
+                .frame(maxWidth: .infinity)
             }
         }
     }
@@ -46,82 +43,65 @@ struct ProfileBadges: View {
     // MARK: Section label
 
     private var sectionLabel: some View {
-        Text("Bộ sưu tập icon của tôi")
+        Text("Bộ sưu tập icon của \(collectionOwnerName ?? "tôi")")
             .font(.custom("Montserrat-Regular", size: 12))
             .foregroundStyle(Color.white)
             .multilineTextAlignment(.center)
     }
 }
 
-// MARK: - ProfileBadgeSlot
+// MARK: - ProfileValueIconSlot
 
-/// Single circular badge — filled (with award icon) or empty (dark placeholder).
-struct ProfileBadgeSlot: View {
-    let awardType: AwardType?
+/// Single circular value-icon slot — filled (icon + name) or empty (dark placeholder).
+struct ProfileValueIconSlot: View {
+    let icon: SunValueIcon?
     let size: CGFloat
-    var onTap: (() -> Void)? = nil
 
     var body: some View {
-        Button(action: { onTap?() }) {
+        VStack(spacing: 6) {
             ZStack {
                 Circle()
                     .fill(Color.profileBadgeBg)
                     .frame(width: size, height: size)
-                    .overlay(
-                        Circle().stroke(Color.profileBadgeBorder, lineWidth: 0.956)
-                    )
+                    .overlay(Circle().stroke(Color.profileBadgeBorder, lineWidth: 0.956))
 
-                if let awardType {
-                    awardIcon(for: awardType)
+                if let icon, UIImage(named: icon.imageName) != nil {
+                    Image(icon.imageName)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: size * 0.75, height: size * 0.75)
+                        .frame(width: size, height: size)
                         .clipShape(Circle())
                 }
             }
-        }
-        .buttonStyle(.plain)
-        .disabled(awardType == nil)
-    }
 
-    private func awardIcon(for type: AwardType) -> Image {
-        // Asset name pattern: "<AwardFolder>_icon" under Assets.xcassets/Momorph/Awards/.
-        // Phase-10 adds these assets; until then fall back to an SF Symbol so the
-        // slot is never an invisible blank.
-        let assetName = "\(type.assetFolder)_icon"
-        if UIImage(named: assetName) != nil { return Image(assetName) }
-        return Image(systemName: "rosette")
+            if let icon {
+                Text(icon.label)
+                    .font(.custom("Montserrat-Regular", size: 6.5))
+                    .foregroundStyle(Color.white)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 }
 
 // MARK: - Preview
 
-#Preview("ProfileBadges - 2 awards") {
+#Preview("ProfileBadges - other (full 6)") {
     ZStack {
         Color.profileDark
         ProfileBadges(
-            awardTypes: [.mvp, .topTalent],
-            onOpenAward: { _ in }
+            valueIcons: SunValueIcon.allCases,
+            collectionOwnerName: "Huỳnh Dương Xuân Nhật"
         )
-        .padding()
+        .padding(.horizontal, 12)
     }
 }
 
-#Preview("ProfileBadges - full (6 awards)") {
+#Preview("ProfileBadges - self (empty)") {
     ZStack {
         Color.profileDark
-        ProfileBadges(
-            awardTypes: AwardType.allCases,
-            onOpenAward: { _ in }
-        )
-        .padding()
-    }
-}
-
-#Preview("ProfileBadges - empty") {
-    ZStack {
-        Color.profileDark
-        ProfileBadges(awardTypes: [])
-            .padding()
+        ProfileBadges(valueIcons: [])
+            .padding(.horizontal, 24)
     }
 }

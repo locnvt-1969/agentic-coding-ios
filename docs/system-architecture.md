@@ -64,12 +64,14 @@ The bottom tab bar is owned by `MainTabView`; individual screens (including Home
 | `Department` | Org unit |
 | `Hashtag` | Kudo tag |
 | `Award` / `AwardType` | Recognition awards |
-| `Kudo` | Core kudos entity; anonymity enforced at model level |
+| `Kudo` | Core kudos entity; anonymity enforced at model level; `isSpam: Bool` field drives Spam badge |
 | `KudoComment` | Comment on a kudo |
 | `AppNotification` | In-app notification |
 | `SecretBox` / `Gift` | Secret box feature |
 | `ContentSection` / `CommunityStandard` / `Rule` | Static content |
 | `CountdownValue` / `AwardItem` / `HomeTab` | Home screen presentation models |
+| `SunValueIcon` | Enum of 6 Sun* value icons (collected via Secret Boxes); shared by Profile badge strip and Rules screen |
+| `ProfileStatsData` | Profile statistics card model (kudos received/sent, hearts, secret boxes); returned by `UserService.fetchProfileStats` |
 
 ---
 
@@ -80,7 +82,7 @@ Domain services follow the same contract: `@MainActor final class`, `static let 
 | Service | Domain |
 |---|---|
 | `AuthService` | Sign-in, session, OAuth |
-| `UserService` | Profile fetch/update |
+| `UserService` | Profile fetch/update; `fetchProfileStats(userId:)` returns `ProfileStatsData` |
 | `KudoService` | List, send, view kudos; list hashtags |
 | `AwardService` | List awards by type (stubbed) |
 | `NotificationService` | List, mark-read notifications |

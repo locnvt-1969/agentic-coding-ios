@@ -86,21 +86,7 @@ struct RulesBadgeTiersSection: View {
 // MARK: - Section 4.3 Icon Collection
 
 struct RulesIconCollectionSection: View {
-    private struct IconItem: Identifiable {
-        let id = UUID()
-        let imageName: String
-        let label: String
-    }
-
-    private let icons: [IconItem] = [
-        IconItem(imageName: "rules_icon_revival",          label: "REVIVAL"),
-        IconItem(imageName: "rules_icon_touch_of_light",   label: "TOUCH OF LIGHT"),
-        IconItem(imageName: "rules_icon_stay_gold",        label: "STAY GOLD"),
-        IconItem(imageName: "rules_icon_flow_to_horizon",  label: "FLOW TO HORIZON"),
-        IconItem(imageName: "rules_icon_beyond_boundary",  label: "BEYOND THE BOUNDARY"),
-        IconItem(imageName: "rules_icon_root_further",     label: "ROOT FURTHER")
-    ]
-
+    // Icons sourced from the shared SunValueIcon model (also drives the Profile collection).
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("NGƯỜI GỬI KUDOS: SƯU TẬP TRỌN BỘ 6 ICON, NHẬN NGAY PHẦN QUÀ BÍ ẨN")
@@ -120,7 +106,7 @@ struct RulesIconCollectionSection: View {
                 columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3),
                 spacing: 12
             ) {
-                ForEach(icons) { icon in
+                ForEach(SunValueIcon.allCases) { icon in
                     RulesIconBadgeItem(imageName: icon.imageName, label: icon.label)
                 }
             }

@@ -67,8 +67,8 @@ struct ProfileKudosSection: View {
     private var filterDropdown: some View {
         ZStack(alignment: .topLeading) {
             if isFilterLocked {
-                // Locked: static label only — no chevron, not tappable
-                Text(filterLabel(for: selectedFilter))
+                // Locked (other-user profile): static "Đã nhận N kudos" label per design
+                Text("Đã nhận \(receivedCount) kudos")
                     .font(.custom("Montserrat-Regular", size: 14))
                     .foregroundStyle(Color.white)
                     .tracking(0.25)

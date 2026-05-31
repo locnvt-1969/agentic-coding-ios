@@ -16,6 +16,8 @@ struct Kudo: Identifiable, Hashable, Codable {
     let reactionCount: Int
     let comments: [KudoComment]
     let isHighlighted: Bool
+    /// Flagged by moderation as spam — drives the "Spam" badge on the kudo card.
+    let isSpam: Bool
 
     init(
         id: String,
@@ -27,7 +29,8 @@ struct Kudo: Identifiable, Hashable, Codable {
         createdAt: Date = Date(timeIntervalSince1970: 0),
         reactionCount: Int = 0,
         comments: [KudoComment] = [],
-        isHighlighted: Bool = false
+        isHighlighted: Bool = false,
+        isSpam: Bool = false
     ) {
         self.id = id
         self.sender = sender
@@ -39,6 +42,7 @@ struct Kudo: Identifiable, Hashable, Codable {
         self.reactionCount = reactionCount
         self.comments = comments
         self.isHighlighted = isHighlighted
+        self.isSpam = isSpam
     }
 
     /// Decodes with the anonymity invariant enforced: an anonymous kudo never
@@ -54,6 +58,7 @@ struct Kudo: Identifiable, Hashable, Codable {
         reactionCount = try c.decodeIfPresent(Int.self, forKey: .reactionCount) ?? 0
         comments = try c.decodeIfPresent([KudoComment].self, forKey: .comments) ?? []
         isHighlighted = try c.decodeIfPresent(Bool.self, forKey: .isHighlighted) ?? false
+        isSpam = try c.decodeIfPresent(Bool.self, forKey: .isSpam) ?? false
         let decodedSender = try c.decodeIfPresent(User.self, forKey: .sender)
         sender = isAnonymous ? nil : decodedSender
     }

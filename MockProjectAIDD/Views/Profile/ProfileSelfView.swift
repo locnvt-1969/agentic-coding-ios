@@ -4,23 +4,20 @@
 // Root composer for "Profile bản thân" screen.
 // Composes: ProfileHeader + ProfileBadges + ProfileStats + ProfileKudosSection.
 // Presentational: data + callbacks as props. No service calls, no ViewModel ownership.
-// Public contract (for phase-09 + phase-19):
-//   ProfileSelfView(user:awards:onEdit:onOpenAward:kudos:kudosReceivedCount:
+//   ProfileSelfView(user:stats:onEdit:kudos:kudosReceivedCount:
 //                   kudosSentCount:onOpenSecretBox:onCopyKudoLink:onViewKudoDetail:)
-//   — edit button is a ProfileSelfView-only overlay; ProfileHeader stays viewer-agnostic for phase-09 reuse.
+//   — edit pencil is a ProfileSelfView-only overlay; ProfileHeader stays viewer-agnostic.
 
 import SwiftUI
 
 struct ProfileSelfView: View {
     let user: User
-    let awards: [Award]
+    let stats: ProfileStatsData
     var onEdit: () -> Void = {}
-    var onOpenAward: (AwardType) -> Void = { _ in }
 
     // Kudos filter state — owned here, passed as binding into section
     @State private var kudosFilter: KudosFilterOption = .sent
 
-    // Sample kudos for preview — in production wired by ViewModel
     var kudos: [Kudo] = []
     var kudosReceivedCount: Int = 0
     var kudosSentCount: Int = 0
@@ -37,17 +34,14 @@ struct ProfileSelfView: View {
                     // 1. Header (keyvisual + avatar + name)
                     ProfileHeader(user: user)
 
-                    // 2. Badge collection
-                    ProfileBadges(
-                        awardTypes: user.awardTypes,
-                        onOpenAward: onOpenAward
-                    )
-                    .padding(.horizontal, 57)
-                    .padding(.top, 24)
+                    // 2. Icon collection (self → empty + "của tôi")
+                    ProfileBadges(valueIcons: user.collectedValueIcons)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 24)
 
                     // 3. Stats card
                     ProfileStats(
-                        stats: buildStats(),
+                        stats: stats,
                         onOpenSecretBox: onOpenSecretBox
                     )
                     .padding(.horizontal, 20)
@@ -85,27 +79,11 @@ struct ProfileSelfView: View {
             }
         }
     }
-
-    // MARK: Helpers
-
-    private func buildStats() -> ProfileStatsData {
-        // In production the ViewModel provides these counts.
-        // Using zero defaults until wired — no magic numbers invented.
-        ProfileStatsData(
-            kudosReceived: kudosReceivedCount,
-            kudosSent: kudosSentCount,
-            heartsReceived: 0,
-            secretBoxOpened: 0,
-            secretBoxUnopened: 0
-        )
-    }
 }
 
 // MARK: - Preview
 
 #Preview("ProfileSelfView - sample data") {
-    @Previewable @State var dummy = false
-
     let sampleUser = User(
         id: "u1",
         name: "Huỳnh Dương Xuân Nhật",
@@ -113,13 +91,8 @@ struct ProfileSelfView: View {
         departmentName: "CEVC3",
         role: "Engineer",
         level: "Legend Hero",
-        awardTypes: [.mvp, .topTalent]
+        collectedValueIcons: []
     )
-
-    let sampleAwards = [
-        Award(id: "a1", type: .mvp, recipientName: "Huỳnh Dương Xuân Nhật", criteria: []),
-        Award(id: "a2", type: .topTalent, recipientName: "Huỳnh Dương Xuân Nhật", criteria: [])
-    ]
 
     let sampleKudo = Kudo(
         id: "k1",
@@ -133,14 +106,14 @@ struct ProfileSelfView: View {
         isAnonymous: false,
         createdAt: ISO8601DateFormatter().date(from: "2025-10-30T10:00:00Z") ?? Date(),
         reactionCount: 1000,
-        isHighlighted: true
+        isHighlighted: true,
+        isSpam: true
     )
 
     ProfileSelfView(
         user: sampleUser,
-        awards: sampleAwards,
+        stats: .sample,
         onEdit: {},
-        onOpenAward: { _ in },
         kudos: [sampleKudo, sampleKudo, sampleKudo],
         kudosReceivedCount: 5,
         kudosSentCount: 5,

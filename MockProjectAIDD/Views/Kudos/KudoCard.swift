@@ -37,6 +37,21 @@ struct KudoCard: View {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Color.kudosBorder, lineWidth: 1)
         )
+        .overlay(alignment: .topTrailing) {
+            if kudo.isSpam { spamBadge }
+        }
+    }
+
+    // "Spam" pill shown when the kudo is flagged by moderation (top-trailing corner).
+    private var spamBadge: some View {
+        Text("Spam")
+            .font(.custom("Montserrat-Medium", size: 12))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 2)
+            .background(Color.kudosSpamBg)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+            .offset(x: 4, y: -8)
     }
 }
 

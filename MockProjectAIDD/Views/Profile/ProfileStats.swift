@@ -7,26 +7,8 @@
 
 import SwiftUI
 
-// MARK: - ProfileStatsData
-
-/// Pure data model for the stats card — no business logic.
-struct ProfileStatsData {
-    var kudosReceived: Int
-    var kudosSent: Int
-    var heartsReceived: Int
-    var secretBoxOpened: Int
-    var secretBoxUnopened: Int
-
-    static let sample = ProfileStatsData(
-        kudosReceived: 5,
-        kudosSent: 25,
-        heartsReceived: 25,
-        secretBoxOpened: 25,
-        secretBoxUnopened: 25
-    )
-}
-
 // MARK: - ProfileStats
+// ProfileStatsData lives in Models/ProfileStatsData.swift (shared with the service layer).
 
 struct ProfileStats: View {
     let stats: ProfileStatsData

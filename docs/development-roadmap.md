@@ -1,6 +1,6 @@
 # Development Roadmap
 
-Last updated: 2026-05-29
+Last updated: 2026-06-01
 
 ---
 
@@ -48,7 +48,13 @@ Last updated: 2026-05-29
 ---
 
 ## Phase 6 — Profile Screen
-**Status: Not started**
+**Status: Complete (mock data layer)**
+
+- `ProfileSelfView` + `ProfileOtherView` wired with mock data
+- `SunValueIcon` collection rendering with dynamic labels
+- `ProfileStatsData` model established (5/25/25/25/25 stats)
+- Spam-tagged kudos display implemented
+- All service mocks in place; Supabase API wiring deferred to Phase 7
 
 ---
 

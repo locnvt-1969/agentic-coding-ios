@@ -17,17 +17,13 @@ struct ProfileOtherContainer: View {
             if let user = vm.user {
                 ProfileOtherView(
                     user: user,
-                    awards: vm.awards,
                     onSendKudo: {
                         router.push(.sendKudo)
-                    },
-                    onOpenAward: { type in
-                        router.push(.awardDetail(type: type))
                     },
                     kudos: vm.kudos,
                     kudosReceivedCount: vm.kudosReceivedCount,
                     onCopyKudoLink: { _ in
-                        // TODO phase-19+: implement kudo link copy via pasteboard
+                        // TODO: implement kudo link copy via pasteboard
                     },
                     onViewKudoDetail: { kudo in
                         router.push(.viewKudo(id: kudo.id))
