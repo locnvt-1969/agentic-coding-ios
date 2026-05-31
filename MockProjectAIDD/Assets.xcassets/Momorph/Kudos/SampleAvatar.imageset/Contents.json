@@ -1,0 +1,13 @@
+{
+  "images" : [
+    {
+      "filename" : "sample-avatar.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
