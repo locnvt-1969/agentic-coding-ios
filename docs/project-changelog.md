@@ -19,6 +19,27 @@
 - `SendKudoViewModel` — title wiring, self-send guard (spec B.2), max-5-hashtags cap, full validation (recipient + title + message + ≥1 hashtag), simulated submit success; rich-text toolbar / @mention / image-upload remain visual-only
 - `SendKudoContainer` — cancel-confirm dialog (spec H), "Community Standards" link wired (spec B.5), success toast + pop navigation on submit (TC_WRITE_FUN_001)
 
+### Added — Kudos board UI completion (Sun*Kudos screen)
+
+**New UI sections (MoMorph fO0Kt19sZZ)**
+- `SpotlightBoardSection` — SPOTLIGHT BOARD header with 388 Kudos stat, static chart image (`SpotlightChart` asset), non-functional search bar
+- `KudosStatsBlock` — personal ALL KUDOS stats: Số Kudos nhận/gửi, Số tim + x2-fire badge (`X2FireBadge` asset), Secret Box opened/unopened counts; "Mở Secret Box" button disabled when unopened=0, wired to Secret Box flow via `AppRouter`
+- `GiftRecipientsList` — "10 SUNNER NHẬN QUÀ MỚI NHẤT" list of Top-10 gift recipients
+
+**New models**
+- `KudosStats` — personal kudos statistics (received, sent, hearts, secret box counts)
+- `GiftRecipient` — Top-10 gift recipient entry
+
+**Mock data layer**
+- `KudoService+Mock.swift` — service extension providing mock `KudosStats` and `GiftRecipient` data; stub bodies return mock values; swap to real Supabase API is surgical (pending SDK wiring)
+- `UserService.mockDepartments` — department mock data added
+
+**Files edited:** `KudoService.swift`, `UserService.swift`, `KudosBoardViewModel.swift`, `KudosBoardView.swift`, `KudosAllSection.swift`, `KudosBoardContainer.swift`
+
+**Interactions not yet wired:** Spotlight search, Top-10 tap, heart button (visual-only this pass)
+
+---
+
 ### Changed — Home screen logic wired to develop3 architecture
 
 - `FeatureFlags` — added `useMockAwards` flag (default `true`) + `eventYear/Month/Day` countdown date constants (demo 2026-06-28; real event 2025-12-26)

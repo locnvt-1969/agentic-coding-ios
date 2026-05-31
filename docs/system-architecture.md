@@ -72,12 +72,16 @@ The bottom tab bar is owned by `MainTabView`; individual screens (including Home
 | `CountdownValue` / `AwardItem` / `HomeTab` | Home screen presentation models |
 | `SunValueIcon` | Enum of 6 Sun* value icons (collected via Secret Boxes); shared by Profile badge strip and Rules screen |
 | `ProfileStatsData` | Profile statistics card model (kudos received/sent, hearts, secret boxes); returned by `UserService.fetchProfileStats` |
+| `KudosStats` | Personal kudos statistics (received, sent, hearts, secret box counts); Kudos board ALL KUDOS block |
+| `GiftRecipient` | Top-10 gift recipient entry for Kudos board |
 
 ---
 
 ## Services
 
 Domain services follow the same contract: `@MainActor final class`, `static let shared`, typed `LocalizedError` enum, `async throws` methods. Currently stubbed — Supabase calls are TODO comments.
+
+**Mock extension pattern:** where temporary mock data is needed before Supabase wiring, it lives in a separate `<Service>+Mock.swift` extension file (e.g. `KudoService+Mock.swift`). The primary service file is unchanged; swapping to real API calls is surgical — replace the mock return with a Supabase call in the extension or primary file. This keeps mock data out of production service logic.
 
 | Service | Domain |
 |---|---|
@@ -143,4 +147,5 @@ Seed data: `supabase/seeds/awards.sql` (3 rows: Top Talent, Top Project, Top Man
 Track B (models, services, ViewModels, navigation) — complete, compiles on iOS 26.2 sim.  
 Track A (UI screens) — complete (14 presentational SwiftUI screens + Home screen).  
 Phase 19 (integration) — complete; 13 container views wired, nav graph fully resolved, loading/error states handled.  
+Kudos board UI — Spotlight board, personal stats block, and Top-10 gift recipients sections added (+ header & hero); "Mở Secret Box" wired to router; mock data via `KudoService+Mock.swift`.  
 App is UI-complete. Home awards load from mock data by default (`FeatureFlags.useMockAwards = true`); the live REST path exists but is not the default. Send Kudo screen is logic-complete on the mock path (`FeatureFlags.useMockKudoData = true`): validation, self-send guard, max-5-hashtags, cancel-confirm dialog, and success toast/pop are functional; rich-text toolbar, @mention, and image-upload remain visual-only. All other service methods are stubbed. Real data wiring is pending SDK installation.

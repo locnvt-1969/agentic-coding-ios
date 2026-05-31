@@ -43,7 +43,13 @@ Last updated: 2026-06-01
 ---
 
 ## Phase 5 — Kudos Screen
-**Status: Not started**
+**Status: In Progress**
+
+- `KudosBoardView` + sub-sections: `SpotlightBoardSection` (388 Kudos stat, chart image, non-functional search), `KudosStatsBlock` (personal received/sent counts, heart + x2-fire badge, Secret Box opened/unopened), `GiftRecipientsList` (Top-10 gift recipients)
+- `KudosStats`, `GiftRecipient` models added
+- `KudoService+Mock.swift` — mock data extension (temporary; surgical swap to Supabase API pending SDK wiring)
+- "Mở Secret Box" button wired to Secret Box flow via `AppRouter`; Spotlight search / Top-10 tap / heart = visual-only this pass
+- Build: SUCCEEDED · Review: 8.2/10 approved
 
 ---
 

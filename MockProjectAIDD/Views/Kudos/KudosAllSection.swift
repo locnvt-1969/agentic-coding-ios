@@ -3,6 +3,14 @@
 //
 // "All Kudos" list section for KudosBoardView.
 // Presentational only: no service calls.
+//
+// Feed cards use full width with 20pt side margins (per user preference, matching
+//   the carousel cards) — gap 12 between cards.
+// "View all Kudos" button matches design node 6891:15987:
+//   width 136, height 32, padding 10px 0, radius 4, gap 8, row centered.
+//   Label: Montserrat 14 / weight 500 / color #FFFFFF.
+//   Icon: arrow.up.right 24×24 white.
+//   Always visible below feed (no expand/collapse toggle).
 
 import SwiftUI
 
@@ -10,24 +18,31 @@ import SwiftUI
 
 struct KudosAllSection: View {
     let kudos: [Kudo]
+    let stats: KudosStats?
+    let giftRecipients: [GiftRecipient]
+    let onOpenSecretBox: () -> Void
     let onOpenKudo: (Kudo) -> Void
-
-    @State private var isExpanded = false
-
-    private var visibleKudos: [Kudo] {
-        isExpanded ? kudos : Array(kudos.prefix(3))
-    }
+    var onViewAll: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             KudosSectionHeader(title: "ALL KUDOS", subtitle: "Sun* Annual Awards 2025")
 
+            if let stats {
+                KudosStatsBlock(stats: stats, onOpenSecretBox: onOpenSecretBox)
+            }
+
+            if !giftRecipients.isEmpty {
+                GiftRecipientsList(recipients: giftRecipients)
+            }
+
             if kudos.isEmpty {
                 KudosEmptyState(message: "Chưa có kudos nào")
                     .padding(.horizontal, 20)
             } else {
+                // Feed cards: full width with 20pt side margins (matches the carousel cards).
                 VStack(spacing: 12) {
-                    ForEach(visibleKudos) { kudo in
+                    ForEach(kudos.prefix(3)) { kudo in
                         KudoCard(
                             kudo: kudo,
                             onCopyLink: {},
@@ -37,24 +52,27 @@ struct KudosAllSection: View {
                     }
                 }
 
-                if kudos.count > 3 {
-                    Button {
-                        isExpanded.toggle()
-                    } label: {
+                // "View all Kudos" button — always visible, navigates to full list
+                // Design node 6891:15987: width 136, height 32, radius 4, gap 8, centered
+                HStack {
+                    Button(action: onViewAll) {
                         HStack(spacing: 8) {
-                            Text(isExpanded ? "Thu gọn" : "View all Kudos")
+                            Text("View all Kudos")
                                 .font(.custom("Montserrat", size: 14))
                                 .fontWeight(.medium)
                                 .foregroundStyle(Color.white)
-                            Image(systemName: isExpanded ? "chevron.up" : "arrow.right")
-                                .font(.system(size: 14))
+                            Image(systemName: "arrow.up.right")
+                                .resizable()
+                                .frame(width: 24, height: 24)
                                 .foregroundStyle(Color.white)
                         }
                         .padding(.vertical, 10)
-                        .frame(maxWidth: .infinity)
+                        .frame(width: 136, height: 32)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                        .contentShape(Rectangle())
                     }
-                    .padding(.horizontal, 20)
                 }
+                .frame(maxWidth: .infinity)
             }
         }
     }
@@ -87,6 +105,16 @@ struct KudosAllSection: View {
             isHighlighted: false
         )
     ]
-    KudosAllSection(kudos: kudos, onOpenKudo: { _ in })
-        .background(Color(hex: "00101A"))
+    KudosAllSection(
+        kudos: kudos,
+        stats: .sample,
+        giftRecipients: [
+            GiftRecipient(id: "g1", name: "Huỳnh Dương Xuân", avatarURL: nil, rewardText: "Nhận được 1 áo phông SAA"),
+            GiftRecipient(id: "g2", name: "Dương Xuân Huỳnh", avatarURL: nil, rewardText: "Nhận được 1 áo phông SAA")
+        ],
+        onOpenSecretBox: {},
+        onOpenKudo: { _ in },
+        onViewAll: {}
+    )
+    .background(Color(hex: "00101A"))
 }

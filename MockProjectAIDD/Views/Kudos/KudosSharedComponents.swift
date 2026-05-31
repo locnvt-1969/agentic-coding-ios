@@ -2,8 +2,9 @@
 // MockProjectAIDD
 //
 // Shared presentational sub-components for the Kudos board:
-// KudosSectionHeader, KudosFilterButton, KudosEmptyState,
-// KudosKeyVisualSection, KudosSendCTAButton.
+// KudosSectionHeader, KudosFilterButton, KudosEmptyState, KudosSendCTAButton.
+// Note: KudosKeyVisualSection removed — use kudos-keyvisual-bg image asset directly
+//       in KudosBoardView, following the HomeView layout pattern.
 
 import SwiftUI
 
@@ -86,37 +87,10 @@ struct KudosEmptyState: View {
     }
 }
 
-// MARK: - KudosKeyVisualSection
-
-struct KudosKeyVisualSection: View {
-    var body: some View {
-        ZStack(alignment: .bottom) {
-            LinearGradient(
-                colors: [Color(hex: "00101A"), Color(hex: "001825")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .frame(height: 200)
-
-            VStack(spacing: 4) {
-                Text("Hệ thống ghi nhận và cảm ơn")
-                    .font(.custom("Montserrat", size: 12))
-                    .fontWeight(.regular)
-                    .foregroundStyle(Color.white.opacity(0.7))
-
-                Text("KUDOS")
-                    .font(.custom("Montserrat", size: 28))
-                    .fontWeight(.bold)
-                    .foregroundStyle(Color.kudosAccent)
-                    .tracking(4)
-            }
-            .padding(.bottom, 24)
-        }
-        .frame(maxWidth: .infinity, minHeight: 200)
-    }
-}
-
 // MARK: - KudosSendCTAButton
+// Design node: mms_A.1_Button ghi nhận (6885:9083)
+// Icon: mm_media_icon (I6885:9083;28:2013) — pencil/edit glyph SVG, color=#00101A
+// Rendered as template image so foregroundStyle controls tint.
 
 struct KudosSendCTAButton: View {
     /// Called when the user taps the CTA. nil = button renders but tap is no-op.
@@ -127,8 +101,11 @@ struct KudosSendCTAButton: View {
             onSendKudo?()
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: "heart.fill")
-                    .font(.system(size: 16))
+                Image("kudos-send-icon")
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 16, height: 16)
                     .foregroundStyle(Color.kudosAccent)
 
                 Text(" Hôm nay, bạn muốn gửi kudos đến ai?   ")
@@ -169,10 +146,6 @@ struct KudosSendCTAButton: View {
 #Preview("KudosEmptyState") {
     KudosEmptyState(message: "Chưa có kudos nổi bật")
         .background(Color(hex: "00101A"))
-}
-
-#Preview("KudosKeyVisualSection") {
-    KudosKeyVisualSection()
 }
 
 #Preview("KudosSendCTAButton") {

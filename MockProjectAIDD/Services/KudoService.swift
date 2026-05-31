@@ -44,8 +44,25 @@ final class KudoService {
     private init() {}
 
     func listKudos(filter: KudoFilter = KudoFilter()) async throws -> [Kudo] {
-        // TODO: Supabase — board feed with filter.
-        return []
+        // TODO: Supabase — board feed with filter. Mock data: KudoService+Mock.swift.
+        var result = Self.mockKudos
+
+        if let hashtagId = filter.hashtagId {
+            result = result.filter { kudo in
+                kudo.hashtags.contains { $0.id == hashtagId }
+            }
+        }
+
+        // Department filter matches the recipient's department name (mock kudos carry
+        // departmentName; resolve the selected id → name via the shared dept list).
+        if let departmentId = filter.departmentId,
+           let departmentName = UserService.mockDepartments.first(where: { $0.id == departmentId })?.name {
+            result = result.filter { kudo in
+                kudo.recipients.contains { $0.departmentName == departmentName }
+            }
+        }
+
+        return result
     }
 
     func listAllKudos(page: Int = 0) async throws -> [Kudo] {
@@ -84,7 +101,10 @@ final class KudoService {
 
     func viewKudo(id: String) async throws -> Kudo {
         // TODO: Supabase — fetch kudo by id.
-        throw KudoError.notFound
+        guard let kudo = Self.mockKudos.first(where: { $0.id == id }) else {
+            throw KudoError.notFound
+        }
+        return kudo
     }
 
     func sendKudo(_ payload: SendKudoPayload) async throws {
@@ -94,6 +114,24 @@ final class KudoService {
 
     func listHashtags() async throws -> [Hashtag] {
         // TODO: Supabase — list hashtags.
-        return []
+        return Self.mockHashtags
+    }
+
+    /// Total Kudos count shown on the Spotlight Board (design B.7.1).
+    func spotlightTotalKudos() async throws -> Int {
+        // TODO: Supabase — SELECT count(*) FROM kudos WHERE status='active'.
+        return Self.mockSpotlightTotal
+    }
+
+    /// The current user's personal statistics (ALL KUDOS block, design D.1).
+    func fetchPersonalStats() async throws -> KudosStats {
+        // TODO: Supabase — GET /api/v1/users/me/kudos-stats.
+        return Self.mockStats
+    }
+
+    /// 10 most recent gift recipients (design D.3).
+    func listGiftRecipients() async throws -> [GiftRecipient] {
+        // TODO: Supabase — GET /api/v1/reward-recipients?limit=10&order=desc.
+        return Self.mockGiftRecipients
     }
 }

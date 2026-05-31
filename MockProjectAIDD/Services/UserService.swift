@@ -23,6 +23,17 @@ final class UserService {
     static let shared = UserService()
     private init() {}
 
+    /// Mock org departments — drives the Kudos board "Phòng ban" filter dropdown.
+    /// TEMPORARY: replace with a Supabase fetch (`GET /api/v1/departments`) later.
+    static let mockDepartments: [Department] = [
+        Department(id: "d1", name: "CEVC2"),
+        Department(id: "d2", name: "CEVC3"),
+        Department(id: "d3", name: "CEVC4"),
+        Department(id: "d4", name: "CEVC1"),
+        Department(id: "d5", name: "OPD"),
+        Department(id: "d6", name: "Infra")
+    ]
+
     func fetchCurrentUser() async throws -> User {
         // TODO: Supabase — fetch authenticated user profile.
         // Mock (from design): self profile — icon collection still empty.
@@ -76,7 +87,7 @@ final class UserService {
 
     func listDepartments() async throws -> [Department] {
         // TODO: Supabase — list departments.
-        return []
+        return Self.mockDepartments
     }
 
     /// Mock sunner directory (from design). Drives search results + other-user profiles.

@@ -10,6 +10,9 @@ final class KudosBoardViewModel {
     var kudos: [Kudo] = []
     var hashtags: [Hashtag] = []
     var departments: [Department] = []
+    var stats: KudosStats?
+    var giftRecipients: [GiftRecipient] = []
+    var spotlightTotal = 0
     var filter = KudoFilter()
     var isLoading = false
     var errorMessage: String?
@@ -29,9 +32,19 @@ final class KudosBoardViewModel {
             async let feed = KudoService.shared.listKudos(filter: filter)
             async let tags = KudoService.shared.listHashtags()
             async let depts = UserService.shared.listDepartments()
-            kudos = try await feed
-            hashtags = try await tags
-            departments = try await depts
+            async let personalStats = KudoService.shared.fetchPersonalStats()
+            async let recipients = KudoService.shared.listGiftRecipients()
+            async let spotlight = KudoService.shared.spotlightTotalKudos()
+            // Await all into locals first so a partial failure never leaves a mix
+            // of fresh + stale state on screen — commit only once everything succeeds.
+            let (loadedKudos, loadedTags, loadedDepts, loadedStats, loadedRecipients, loadedSpotlight) =
+                try await (feed, tags, depts, personalStats, recipients, spotlight)
+            kudos = loadedKudos
+            hashtags = loadedTags
+            departments = loadedDepts
+            stats = loadedStats
+            giftRecipients = loadedRecipients
+            spotlightTotal = loadedSpotlight
         } catch {
             errorMessage = error.localizedDescription
         }

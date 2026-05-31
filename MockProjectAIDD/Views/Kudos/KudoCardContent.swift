@@ -73,6 +73,11 @@ struct KudoCardContent: View {
 }
 
 // MARK: - KudoCardActions
+// Layout matches design node mms_B.4.4_Action (I6885:9263;89:2972):
+//   outer row: justifyContent space-between, width 250, height 24
+//   Hearts group: width 44, height 16, gap 1.85 — count + heart icon (16×16)
+//   Buttons group: width 173, height 24, gap 3.70 — CopyLink (79w) + XemChiTiet (90w)
+//   Each button: padding 4, gap 4 between text and icon, height 24
 
 struct KudoCardActions: View {
     let reactionCount: Int
@@ -81,19 +86,22 @@ struct KudoCardActions: View {
 
     var body: some View {
         HStack(spacing: 0) {
+            // Hearts group — width 44, height 16, gap 1.85
             HStack(spacing: 1.85) {
                 Text(reactionCount.formatted())
                     .font(.custom("Montserrat", size: 10))
                     .fontWeight(.regular)
                     .foregroundStyle(Color.kudosDark)
                 Image(systemName: "heart.fill")
-                    .font(.system(size: 10))
+                    .resizable()
+                    .frame(width: 16, height: 16)
                     .foregroundStyle(Color.kudosHashtag)
             }
-            .frame(width: 44, alignment: .leading)
+            .frame(width: 44, height: 16, alignment: .leading)
 
             Spacer()
 
+            // Buttons group — width 173, height 24, gap 3.70
             HStack(spacing: 3.7) {
                 Button {
                     onCopyLink?()
@@ -104,11 +112,12 @@ struct KudoCardActions: View {
                             .fontWeight(.medium)
                             .foregroundStyle(Color.kudosDark)
                         Image(systemName: "link")
-                            .font(.system(size: 10))
+                            .resizable()
+                            .frame(width: 16, height: 16)
                             .foregroundStyle(Color.kudosDark)
                     }
                     .padding(4)
-                    .frame(height: 24)
+                    .frame(width: 79, height: 24)
                     .contentShape(Rectangle())
                 }
 
@@ -120,17 +129,19 @@ struct KudoCardActions: View {
                             .font(.custom("Montserrat", size: 10))
                             .fontWeight(.medium)
                             .foregroundStyle(Color.kudosDark)
-                        Image(systemName: "arrow.right")
-                            .font(.system(size: 10))
+                        Image(systemName: "arrow.up.right")
+                            .resizable()
+                            .frame(width: 16, height: 16)
                             .foregroundStyle(Color.kudosDark)
                     }
                     .padding(4)
-                    .frame(height: 24)
+                    .frame(width: 90, height: 24)
                     .contentShape(Rectangle())
                 }
             }
+            .frame(width: 173, height: 24)
         }
-        .frame(height: 24)
+        .frame(width: 250, height: 24)
     }
 }
 
