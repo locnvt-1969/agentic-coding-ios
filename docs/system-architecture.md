@@ -78,5 +78,5 @@ One ViewModel per screen. All `@Observable @MainActor final class`. Bound via `@
 ## Status
 
 Track B (models, services, ViewModels, navigation) — complete, compiles on iOS 26.2 sim.  
-Track A (UI screens) — pending.  
+Track A (UI screens) — complete (14 presentational SwiftUI screens).  
 Supabase integration — stubbed; all service methods return empty/throw placeholder errors.
