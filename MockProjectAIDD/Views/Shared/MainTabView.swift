@@ -10,27 +10,30 @@ struct MainTabView: View {
     @EnvironmentObject private var router: AppRouter
     @State private var selectedTab: Tab = .home
 
-    enum Tab: Hashable { case home, kudos, notifications, profile }
+    // Bottom tabs per Figma [iOS] navigation bar: SAA 2025 · Awards · Kudos · Profile.
+    // Notifications is NOT a tab — it lives in the top navigation bell.
+    enum Tab: Hashable { case home, awards, kudos, profile }
 
     var body: some View {
         NavigationStack(path: $router.path) {
             TabView(selection: $selectedTab) {
                 HomeView()
-                    .tabItem { Label("Home", systemImage: "house.fill") }
+                    .tabItem { Label("SAA 2025", image: "tab-home") }
                     .tag(Tab.home)
 
+                AwardDetailContainer()
+                    .tabItem { Label("Awards", image: "tab-award") }
+                    .tag(Tab.awards)
+
                 KudosBoardContainer()
-                    .tabItem { Label("Kudos", systemImage: "hands.clap.fill") }
+                    .tabItem { Label("Kudos", image: "tab-kudos") }
                     .tag(Tab.kudos)
 
-                NotificationsContainer()
-                    .tabItem { Label("Alerts", systemImage: "bell.fill") }
-                    .tag(Tab.notifications)
-
                 ProfileSelfContainer()
-                    .tabItem { Label("Profile", systemImage: "person.fill") }
+                    .tabItem { Label("Profile", image: "tab-profile") }
                     .tag(Tab.profile)
             }
+            .tint(Color.awardGold)
             .navigationDestination(for: NavDestination.self) { destination in
                 NavDestinationResolver(destination: destination)
             }
@@ -49,7 +52,7 @@ private struct NavDestinationResolver: View {
         case .profileOther(let userId):
             ProfileOtherContainer(userId: userId)
         case .awardDetail(let type):
-            AwardDetailContainer(type: type)
+            AwardDetailContainer(initialType: type, showsBack: true)
         case .secretBox:
             SecretBoxContainer()
         case .kudosBoard:

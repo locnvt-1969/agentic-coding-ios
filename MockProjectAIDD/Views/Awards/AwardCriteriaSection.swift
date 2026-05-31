@@ -63,11 +63,19 @@ struct AwardCriteriaSection: View {
         VStack(alignment: .leading, spacing: 12) {
             // Award section header: trophy icon + award title
             HStack(spacing: 8) {
-                Image(systemName: "trophy.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 24, height: 24)
-                    .foregroundStyle(Color.awardGold)
+                Group {
+                    if UIImage(named: "ic-award-trophy") != nil {
+                        Image("ic-award-trophy")
+                            .resizable()
+                            .scaledToFit()
+                    } else {
+                        Image(systemName: "trophy.fill")
+                            .resizable()
+                            .scaledToFit()
+                    }
+                }
+                .frame(width: 24, height: 24)
+                .foregroundStyle(Color.awardGold)
 
                 Text(style.displayTitle)
                     .font(.custom("Montserrat", size: 14).weight(.bold))

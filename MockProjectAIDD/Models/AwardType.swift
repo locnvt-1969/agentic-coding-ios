@@ -39,4 +39,10 @@ enum AwardType: String, CaseIterable, Identifiable, Hashable, Codable {
         case .topTalent: return "TopTalent"
         }
     }
+
+    /// Full medallion graphic (ring + pedestal + wordmark as one image).
+    /// Named <Folder>_medallion in Assets.xcassets/Momorph/Awards/.
+    var medallionAsset: String {
+        "\(assetFolder)_medallion"
+    }
 }

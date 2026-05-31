@@ -7,7 +7,11 @@
 import SwiftUI
 
 struct AwardDetailContainer: View {
-    let type: AwardType
+    /// Award shown first. As a tab root this defaults to Top Talent; when pushed
+    /// from Home it's the tapped award.
+    var initialType: AwardType = .topTalent
+    /// Tab root hides the back button; pushed presentation shows it.
+    var showsBack: Bool = false
 
     @State private var vm = AwardsViewModel()
     @EnvironmentObject private var router: AppRouter
@@ -17,22 +21,25 @@ struct AwardDetailContainer: View {
             if let award = vm.award {
                 AwardDetailView(
                     award: award,
-                    onBack: {
-                        router.pop()
-                    }
+                    availableTypes: vm.availableTypes,
+                    onSelectType: { vm.select($0) },
+                    onBack: showsBack ? { router.pop() } : nil,
+                    onSearch: { router.push(.searchSunner) },
+                    onNotifications: { router.push(.notifications) },
+                    onKudosDetail: { router.push(.kudosBoard) }
                 )
             } else if vm.errorMessage != nil {
                 ContainerErrorView(
                     message: vm.errorMessage ?? "",
-                    onRetry: { Task { await vm.load(type: type) } },
-                    onBack: { router.pop() }
+                    onRetry: { Task { await vm.load(type: vm.selectedType) } },
+                    onBack: showsBack ? { router.pop() } : nil
                 )
             } else {
                 loadingView
             }
         }
         .task {
-            await vm.load(type: type)
+            if vm.award == nil { await vm.load(type: initialType) }
         }
         .alert(
             "Lỗi",

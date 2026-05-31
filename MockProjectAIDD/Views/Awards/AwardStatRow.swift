@@ -52,15 +52,29 @@ struct AwardStatRow: View {
     private var iconView: some View {
         switch icon {
         case .diamond:
-            Image(systemName: "diamond.fill")
-                .resizable()
-                .scaledToFit()
-                .foregroundStyle(Color.awardGold)
+            if UIImage(named: "ic-award-diamond") != nil {
+                Image("ic-award-diamond")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundStyle(Color.white)
+            } else {
+                Image(systemName: "diamond.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundStyle(Color.white)
+            }
         case .flag:
-            Image(systemName: "flag.fill")
-                .resizable()
-                .scaledToFit()
-                .foregroundStyle(Color.awardGold)
+            if UIImage(named: "ic-award-flag") != nil {
+                Image("ic-award-flag")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundStyle(Color.white)
+            } else {
+                Image(systemName: "flag.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundStyle(Color.white)
+            }
         }
     }
 }
