@@ -17,7 +17,7 @@ struct MainTabView: View {
     var body: some View {
         NavigationStack(path: $router.path) {
             TabView(selection: $selectedTab) {
-                HomeView()
+                HomeContainerView()
                     .tabItem { Label("SAA 2025", image: "tab-home") }
                     .tag(Tab.home)
 

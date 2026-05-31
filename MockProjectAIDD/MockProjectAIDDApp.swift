@@ -25,6 +25,9 @@ struct MockProjectAIDDApp: App {
                     }
                 }
                 .animation(.easeInOut(duration: 0.25), value: router.currentRoute)
+
+                // App-level toast — visible on every route
+                ToastBannerView()
             }
             .environmentObject(router)
         }

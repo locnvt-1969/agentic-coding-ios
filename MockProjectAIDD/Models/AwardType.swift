@@ -16,6 +16,18 @@ enum AwardType: String, CaseIterable, Identifiable, Hashable, Codable {
 
     var id: String { rawValue }
 
+    /// Maps a backend award `id` (from the awards table, e.g. "top-talent") to an AwardType.
+    /// The DB uses "top-manager" which has no exact case here → falls back to `.bestManager`.
+    /// Unknown ids fall back to `.topTalent`.
+    init(awardId: String) {
+        switch awardId {
+        case "top-talent":  self = .topTalent
+        case "top-project": self = .topProject
+        case "top-manager": self = .bestManager
+        default:            self = .topTalent
+        }
+    }
+
     /// Display title — confirm against Figma copy during Track A.
     var title: String {
         switch self {

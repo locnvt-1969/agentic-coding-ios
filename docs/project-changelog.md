@@ -1,5 +1,18 @@
 # Project Changelog
 
+## [Unreleased] — 2026-06-01
+
+### Changed — Home screen logic wired to develop3 architecture
+
+- `FeatureFlags` — added `useMockAwards` flag (default `true`) + `eventYear/Month/Day` countdown date constants (demo 2026-06-28; real event 2025-12-26)
+- `CountdownTimer` — target date sourced from `FeatureFlags` (was hardcoded)
+- `AwardType` — new `init(awardId:)` mapping backend award IDs → `AwardType` (`top-manager` → `.bestManager` fallback)
+- `HomeViewModel` — 8 interactive CTAs now push real `NavDestination` via `AppRouter` (Search → `.searchSunner`, Bell → `.notifications`, About Award → `.awardDetail(.topTalent)`, About Kudos → `.kudosBoard`, Award card → `.awardDetail`, Kudos detail → `.kudosBoard`, FAB pencil → `.sendKudo`, FAB S/Kudos → `.allKudos`); `ToastCenter` dependency removed from `HomeViewModel`
+- `HomeViewModel` — awards now load from `HomeViewMockData` when `FeatureFlags.useMockAwards` is true; live Supabase REST path preserved in the `else` branch
+- `HomeContainerView` — passes `AppRouter` into nav closures
+
+---
+
 ## [Unreleased] — 2026-05-30
 
 ### Added — Track B backbone (iOS Sun* Kudos app)
@@ -64,3 +77,40 @@
 
 ### Pending
 - Supabase SDK wiring (all service methods currently stubbed; real data is future work)
+
+---
+
+## [Unreleased] — 2026-05-29
+
+### Added — Home Screen (Phase 3)
+
+**iOS**
+- `HomeContainerView`, `HomeView` and sub-views: `HomeHeaderView`, `HomeHeroSection`, `HomeAwardsSection`, `HomeAwardCard`, `HomeKudosSection`, `HomeThemeSection`, `HomeBottomNavBar`, `HomeFAB`
+- `HomeViewModel` (`@Observable`) — owns `AwardsLoadState` and drives awards fetch
+- `AwardsService` — `URLSession` → Supabase REST `GET /rest/v1/awards?select=*&order=display_order.asc`
+- `CountdownTimer` (`@Observable`) — 1-second tick toward 2025-12-26 00:00 Asia/Saigon; exposes `CountdownValue`, `comingSoonVisible`, `eventEnded`
+- `ToastCenter` (`@Observable` singleton) + `ToastBannerView` — ephemeral overlay at app root, auto-dismisses after 1.6 s
+- `HomeModels.swift` — `CountdownValue`, `AwardItem`, `HomeTab`
+- `AwardsLoadState` enum — `idle / loading / loaded([AwardItem]) / empty / error(String)`
+- `SupabaseConfig` — REST base URL (`http://localhost:54321`), anon key, `restURL` helper
+- `FeatureFlags` — `isKudosAvailable: Bool` (compile-time, default `true`)
+
+**Integration note (merge resolution)**
+- Home is wired as the `.home` tab of the existing `MainTabView` shell (develop3 navigation architecture). The per-screen `HomeBottomNavBar` is superseded by the shared tab bar, so the standalone `.awards` / `.kudos` / `.profile` routes and their placeholder views are not part of the integrated navigation graph.
+
+**Backend**
+- Supabase migration `20260529000000_create_awards.sql` — `public.awards` table, RLS enabled, anon-read policy
+- Seed `supabase/seeds/awards.sql` — 3 rows: Top Talent, Top Project, Top Manager
+
+---
+
+## [0.1.0] — 2026-05-28
+
+### Added — Login Screen (Phase 2)
+
+- `LoginView`, `LoginContainerView`, `LoginHeaderView`, `LoginGoogleButton`
+- `LanguageDropdownView`, `AppLanguage` model
+- `AuthService` — Google OAuth stub (Supabase Swift SDK not yet installed via SPM)
+- `AppRouter` (`ObservableObject`) with `AppRoute.login` / `.home`
+- `Color+Hex.swift` extension
+- Initial Xcode project, MVVM + Router directory structure

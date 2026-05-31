@@ -17,6 +17,13 @@ struct AwardTopNavigationBar: View {
     var onSearch: (() -> Void)? = nil
     var onNotifications: (() -> Void)? = nil
 
+    // MARK: - Dynamic state (defaults preserve the Award screen's original look)
+    /// Selected language shown in the pill. `.vn` renders the drawn VN flag; others use an emoji flag.
+    var language: AppLanguage = .vn
+    /// Notification badge shows when `> 0`. Defaults to 1 so screens that don't track an unread
+    /// count (e.g. Award) keep the always-visible badge from the original design.
+    var unreadCount: Int = 1
+
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
             logoView
@@ -51,11 +58,16 @@ struct AwardTopNavigationBar: View {
     private var languageButton: some View {
         Button(action: { onLanguage?() }) {
             HStack(spacing: 8) {
-                // VN flag — country frame: width=50, VN flag icon=24×24 + "VN" text
+                // Flag + code — VN uses the drawn flag; other languages fall back to an emoji flag.
                 HStack(spacing: 4) {
-                    VNFlagIcon()
-                        .frame(width: 20, height: 15)
-                    Text("VN")
+                    if language == .vn {
+                        VNFlagIcon()
+                            .frame(width: 20, height: 15)
+                    } else {
+                        Text(language.flagEmoji)
+                            .font(.system(size: 16))
+                    }
+                    Text(language.displayCode)
                         .font(.custom("Montserrat", size: 14).weight(.medium))
                         .foregroundStyle(.white)
                 }
@@ -89,10 +101,12 @@ struct AwardTopNavigationBar: View {
                     .resizable()
                     .frame(width: 24, height: 24)
                     .foregroundStyle(.white)
-                Circle()
-                    .fill(Color(hex: "D4271D"))
-                    .frame(width: 8, height: 8)
-                    .offset(x: 1, y: -1)
+                if unreadCount > 0 {
+                    Circle()
+                        .fill(Color(hex: "D4271D"))
+                        .frame(width: 8, height: 8)
+                        .offset(x: 1, y: -1)
+                }
             }
         }
     }
