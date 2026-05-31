@@ -5,6 +5,8 @@ import Foundation
 
 struct Kudo: Identifiable, Hashable, Codable {
     let id: String
+    /// Optional self-set title (danh hiệu) shown as the kudo's heading.
+    let title: String?
     /// Raw sender. NEVER read directly in the view layer — use `resolvedSender`,
     /// which enforces anonymity. Kept private so the invariant is unbypassable.
     private let sender: User?
@@ -21,6 +23,7 @@ struct Kudo: Identifiable, Hashable, Codable {
 
     init(
         id: String,
+        title: String? = nil,
         sender: User?,
         recipients: [User],
         message: String,
@@ -33,6 +36,7 @@ struct Kudo: Identifiable, Hashable, Codable {
         isSpam: Bool = false
     ) {
         self.id = id
+        self.title = title
         self.sender = sender
         self.recipients = recipients
         self.message = message
@@ -50,6 +54,7 @@ struct Kudo: Identifiable, Hashable, Codable {
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
+        title = try c.decodeIfPresent(String.self, forKey: .title)
         recipients = try c.decode([User].self, forKey: .recipients)
         message = try c.decode(String.self, forKey: .message)
         hashtags = try c.decodeIfPresent([Hashtag].self, forKey: .hashtags) ?? []

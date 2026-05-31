@@ -39,28 +39,35 @@ Thay toàn bộ stub service bằng lệnh gọi Supabase thật, để mọi ch
 
 ## Status
 
-**Increment 1 (2026-06-01, Batch 1) — Build SUCCEEDED, Review 8/10 0-critical, Live-DB verified**
+**Increment 2 (2026-06-01, Batch 1 Groundwork) — Build SUCCEEDED, Review 0-critical (2 fixes), end-to-end verified**
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| P1 Foundation | **PARTIAL** | REST client (`SupabaseRESTClient.swift`) done; SDK + RPC (`get_profile`) deferred to Increment 2 |
+| P1 Foundation | **PARTIAL** | REST client + RPC `get_profile(p_id)` done (migration applied, verified); SDK client + auth (SupabaseClientProvider) deferred to implementation |
 | P2 Auth | pending | Deferred; blocks real session + user-context reads |
-| P3 Models/DTO | pending | Deferred; snake_case decode wired in REST client |
+| P3 Models/DTO | **PARTIAL** | `SunValueIcon.dbId` + `init?(dbId:)`, `Kudo.title`, `ProfileDTO` (maps to User + stats) done; KudoDTO + full Kudo recipient alignment pending |
 | P4 Read services | **PARTIAL** | `ContentService` wired (reads `content_sections` live); KudoService/AwardService/hashtags/departments pending |
-| P5 User services | pending | Blocked on P2 (auth); deferred to Increment 2 |
+| P5 User services | pending | Blocked on P2 (auth); deferred to implementation phase |
 | P6 Integration & verify | pending | Deferred pending P5 completion |
 
-**Increment 1 Deliverables:**
-- ✅ `Services/SupabaseRESTClient.swift` (actor, GET + typed errors, snake_case decode)
-- ✅ `Services/ContentService.swift` wired (reads `content_sections` live from DB, verified end-to-end)
+**Increment 2 Groundwork Deliverables (auth-independent baseline):**
+- ✅ `supabase/migrations/20260601000800_get_profile_rpc.sql` — `get_profile(p_id)` RPC (composed profile JSON: user + dept + hero tier + icons + stats), SECURITY DEFINER, grant to `authenticated` only (PUBLIC execute revoked)
+- ✅ `Models/SunValueIcon.swift` — added `dbId` property + `init?(dbId:)` (DB slug ↔ case mapper)
+- ✅ `Models/Kudo.swift` — added `title: String?` (optional danh hiệu/heading)
+- ✅ `Services/ProfileDTO.swift` — decode layer for `get_profile` RPC JSON → `User` + `ProfileStatsData` (consumed in P5)
 - ✅ Build: SUCCEEDED
-- ✅ Review: 8/10, 0 critical (2 fixes applied)
-- ✅ Live-DB read verified (Community Standards screen renders DB value)
+- ✅ Review: 0 critical (2 fixes applied)
+- ✅ `get_profile` RPC verified end-to-end
 
-**Increment 2 (planned) — Auth + full read-public + user-context**
-- P1 rest: SDK + SupabaseClientProvider + RPC
-- P2 full: Google OAuth
-- P3 full: Kudo model alignment
-- P4 rest: KudoService + AwardService + hashtags/departments
-- P5 full: sendKudo + reactions + profile + secret box + notifications
-- P6 full: integration + verify all flows
+**Follow-ups logged (do not implement):**
+- P5 gate: `SupabaseRESTClient` needs `post(rpc:)` method before wiring get_profile (currently GET-only)
+- P5: map RPC NULL (unknown id) → `UserError.notFound` in service layer
+- SECURITY: all custom Postgres functions default to PUBLIC EXECUTE; `grant_national_kudos` (SECURITY DEFINER, writes `user_rewards`) currently PUBLIC-callable — revoke EXECUTE from PUBLIC on gamification/notification functions in migration 20260601000700 during P2 hardening
+
+**Remaining Increment 2 work (deferred to implementation):**
+- P1 rest: SDK installation + SupabaseClientProvider + HTTP client wiring
+- P2 full: Google OAuth + session restore/sign-out + router gate
+- P3 rest: KudoDTO + recipient alignment
+- P4 rest: KudoService + AwardService + hashtags/departments wired
+- P5 full: sendKudo + reactions + profile + secret box + notifications via SDK/RPC
+- P6 full: integration + end-to-end verification

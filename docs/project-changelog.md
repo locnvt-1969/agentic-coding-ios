@@ -2,6 +2,16 @@
 
 ## [Unreleased] — 2026-06-01
 
+### Added — Supabase API groundwork: get_profile RPC + model/DTO alignment (Increment 2 baseline, auth-independent)
+
+- `supabase/migrations/20260601000800_get_profile_rpc.sql` — `get_profile(p_id uuid)` RPC (SECURITY DEFINER) returns composed JSON: profile user data + department name + hero tier label + collected value icon IDs + stats (kudos received/sent, hearts, secret box counts); grant to `authenticated` only (PUBLIC EXECUTE revoked for security)
+- `Models/SunValueIcon.swift` — added `dbId` property + `init?(dbId:)` for bidirectional DB slug ↔ enum case mapping (`'touch_of_light'` ↔ `.touchOfLight`)
+- `Models/Kudo.swift` — added `title: String?` field (optional danh hiệu/heading); anonymity invariant enforced in `init(from:)`
+- `Services/ProfileDTO.swift` — decode layer for `get_profile` RPC JSON payload with `.convertFromSnakeCase` via `SupabaseRESTClient`; maps to domain `User` (with `level` = hero_label, icons decoded via `SunValueIcon`) + `ProfileStatsData`
+- RPC verified end-to-end (DB migration applies, sample profile returns correct JSON structure)
+- Build: SUCCEEDED · Review: 0 critical (2 fixes applied)
+- **Blocked follow-ups (logged, not implemented):** (a) `SupabaseRESTClient.post(rpc:)` method needed before P5 wiring; (b) RPC NULL → `UserError.notFound` mapping in service layer; (c) SECURITY: `grant_national_kudos` function (SECURITY DEFINER, writes `user_rewards`) currently PUBLIC-callable — revoke during P2 hardening (migration 20260601000700)
+
 ### Added — Supabase REST client + ContentService (Increment 1 of API integration)
 
 - `Services/SupabaseRESTClient.swift` — reusable actor-based PostgREST client (GET + headers + `convertFromSnakeCase` decode + typed error enum); pattern extracted from `AwardsService` for DRY across all data services

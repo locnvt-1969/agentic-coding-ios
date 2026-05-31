@@ -40,4 +40,22 @@ enum SunValueIcon: String, CaseIterable, Identifiable, Hashable, Codable {
         case .rootFurther:       return "ROOT FURTHER"
         }
     }
+
+    /// Database slug (snake_case) used by Supabase `value_icons.id` / `value_icon_ids`.
+    var dbId: String {
+        switch self {
+        case .revival:           return "revival"
+        case .touchOfLight:      return "touch_of_light"
+        case .stayGold:          return "stay_gold"
+        case .flowToHorizon:     return "flow_to_horizon"
+        case .beyondTheBoundary: return "beyond_the_boundary"
+        case .rootFurther:       return "root_further"
+        }
+    }
+
+    /// Build from a database slug (e.g. "touch_of_light"); nil if unknown.
+    init?(dbId: String) {
+        guard let match = Self.allCases.first(where: { $0.dbId == dbId }) else { return nil }
+        self = match
+    }
 }

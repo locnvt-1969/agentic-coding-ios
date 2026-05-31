@@ -64,13 +64,13 @@ The bottom tab bar is owned by `MainTabView`; individual screens (including Home
 | `Department` | Org unit |
 | `Hashtag` | Kudo tag |
 | `Award` / `AwardType` | Recognition awards |
-| `Kudo` | Core kudos entity; anonymity enforced at model level; `isSpam: Bool` field drives Spam badge |
+| `Kudo` | Core kudos entity; anonymity enforced at model level; `isSpam: Bool` field drives Spam badge; `title: String?` optional self-set heading |
 | `KudoComment` | Comment on a kudo |
 | `AppNotification` | In-app notification |
 | `SecretBox` / `Gift` | Secret box feature |
 | `ContentSection` / `CommunityStandard` / `Rule` | Static content |
 | `CountdownValue` / `AwardItem` / `HomeTab` | Home screen presentation models |
-| `SunValueIcon` | Enum of 6 Sun* value icons (collected via Secret Boxes); shared by Profile badge strip and Rules screen |
+| `SunValueIcon` | Enum of 6 Sun* value icons (collected via Secret Boxes); shared by Profile badge strip and Rules screen. Each case exposes a `dbId: String` (snake_case Supabase slug) and `init?(dbId:)` for decoding from `get_profile` payload |
 | `ProfileStatsData` | Profile statistics card model (kudos received/sent, hearts, secret boxes); returned by `UserService.fetchProfileStats` |
 | `KudosStats` | Personal kudos statistics (received, sent, hearts, secret box counts); Kudos board ALL KUDOS block |
 | `GiftRecipient` | Top-10 gift recipient entry for Kudos board |
@@ -88,7 +88,7 @@ Domain services follow the same contract: `@MainActor final class`, `static let 
 | Service | Domain |
 |---|---|
 | `AuthService` | Sign-in, session, OAuth |
-| `UserService` | Profile fetch/update; `fetchProfileStats(userId:)` returns `ProfileStatsData` |
+| `UserService` | Profile fetch/update; `fetchProfileStats(userId:)` returns `ProfileStatsData`. `ProfileDTO` (`Services/ProfileDTO.swift`) is the decode layer for the `get_profile(p_id)` Postgres RPC (composed JSON: profile + department + hero tier + collected value icons + stats; SECURITY DEFINER; `authenticated` only); maps to `User` + `ProfileStatsData` via `toUser()` / `toStats()`. Wired into `UserService` at P5 |
 | `KudoService` | List, send, view kudos; list hashtags |
 | `AwardService` | List awards by type (stubbed) |
 | `NotificationService` | List, mark-read notifications |
@@ -152,6 +152,6 @@ Track A (UI screens) — complete (14 presentational SwiftUI screens + Home scre
 Phase 19 (integration) — complete; 13 container views wired, nav graph fully resolved, loading/error states handled.  
 Kudos board UI — Spotlight board, personal stats block, and Top-10 gift recipients sections added (+ header & hero); "Mở Secret Box" wired to router; mock data via `KudoService+Mock.swift`.  
 Notifications screen — mock data complete (`FeatureFlags.useMockNotifications = true`); 7 notification kinds with tap-to-mark-read and mark-all-read; `contentHidden` links to Community Standards; per-type deep navigation deferred.  
-App is UI-complete. **Supabase API integration Increment 1 complete:** `SupabaseRESTClient` (shared actor) provides the reusable PostgREST GET transport; `ContentService` (`communityStandards()` + `rules()`) reads the live `content_sections` table — the first domain service beyond `AwardsService` to use the real DB. Home awards load from mock data by default (`FeatureFlags.useMockAwards = true`); the live REST path exists but is not the default. Send Kudo screen is logic-complete on the mock path (`FeatureFlags.useMockKudoData = true`): validation, self-send guard, max-5-hashtags, cancel-confirm dialog, and success toast/pop are functional; rich-text toolbar, @mention, and image-upload remain visual-only. All other service methods are stubbed. POST/PATCH/DELETE/RPC support and user-JWT wiring are planned for later increments.
+App is UI-complete. **Supabase API integration Increment 1 complete:** `SupabaseRESTClient` (shared actor) provides the reusable PostgREST GET transport; `ContentService` (`communityStandards()` + `rules()`) reads the live `content_sections` table — the first domain service beyond `AwardsService` to use the real DB. Home awards load from mock data by default (`FeatureFlags.useMockAwards = true`); the live REST path exists but is not the default. Send Kudo screen is logic-complete on the mock path (`FeatureFlags.useMockKudoData = true`): validation, self-send guard, max-5-hashtags, cancel-confirm dialog, and success toast/pop are functional; rich-text toolbar, @mention, and image-upload remain visual-only. **Supabase API integration Increment 2 complete (auth-independent groundwork):** `get_profile(p_id)` Postgres RPC added (SECURITY DEFINER, `authenticated`-only; returns composed JSON: profile + department + hero tier + collected value icons + stats). `ProfileDTO` decode layer (`Services/ProfileDTO.swift`) maps RPC output to `User` + `ProfileStatsData`; not yet wired into `UserService` (planned P5). `SunValueIcon` extended with `dbId` / `init?(dbId:)` for DB slug mapping. `Kudo` model gains optional `title: String?` field. All other service methods remain stubbed. POST/PATCH/DELETE and user-JWT wiring planned for later increments.
 
 **UI scroll pattern (full-screen content screens):** `safeAreaInset(.top)` + background keyvisual + `toolbar(.hidden)` is the established pattern for screens that render a custom header with a background image extending behind the status bar. Applied to: `NotificationsView`, `CommunityStandardsView`, `RulesView`. The `.ignoresSafeArea(.top)` approach is deprecated for these screens.
