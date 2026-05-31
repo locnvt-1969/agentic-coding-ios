@@ -16,21 +16,21 @@ struct RulesView: View {
     var onClose: (() -> Void)? = nil
     var onWriteKudos: (() -> Void)? = nil
 
+    // Layout mirrors CommunityStandardsView (commit 61ada84): a plain ScrollView whose
+    // content respects the top safe area, the custom nav bar pinned via `.safeAreaInset`,
+    // and the keyvisual drawn via `.background`. Avoids the `.ignoresSafeArea(.top)` + scroll
+    // anti-pattern that clips content inside a NavigationStack.
     var body: some View {
-        ZStack(alignment: .top) {
+        ScrollView(.vertical, showsIndicators: false) {
+            RulesContentCard(rule: rule, onClose: onClose, onWriteKudos: onWriteKudos)
+        }
+        .background(alignment: .top) {
             RulesBackgroundLayer()
-
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 0) {
-                    Spacer().frame(height: 89)
-                    RulesContentCard(rule: rule, onClose: onClose, onWriteKudos: onWriteKudos)
-                }
-            }
-
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
             RulesNavBar(title: rule.title, onBack: onClose)
         }
-        .background(Color(hex: "00101A"))
-        .ignoresSafeArea(edges: .top)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
@@ -40,16 +40,16 @@ struct RulesView: View {
 private struct RulesBackgroundLayer: View {
     var body: some View {
         ZStack {
+            Color(hex: "00101A")
             Image("MM_MEDIA_Keyvisual_BG")
                 .resizable()
                 .scaledToFill()
                 .frame(maxWidth: .infinity)
                 .clipped()
-
             LinearGradient(
                 stops: [
-                    .init(color: Color(hex: "00101A").opacity(0), location: 0),
-                    .init(color: Color(hex: "00101A"), location: 0.5)
+                    .init(color: Color(hex: "001320").opacity(0), location: 0),
+                    .init(color: Color(hex: "00101A"),            location: 0.5)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -57,6 +57,7 @@ private struct RulesBackgroundLayer: View {
         }
         .frame(maxWidth: .infinity)
         .ignoresSafeArea()
+        .allowsHitTesting(false)
     }
 }
 
@@ -69,47 +70,44 @@ private struct RulesNavBar: View {
     var onBack: (() -> Void)?
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer().frame(height: 47)
-            ZStack {
-                // Centered title — expands to full width, truncates with ellipsis on
-                // extreme cases rather than clipping.
-                Text(title)
-                    .font(.custom("Helvetica Neue", size: 17).weight(.medium))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .center)
+        ZStack {
+            // Centered title — expands to full width, truncates with ellipsis on
+            // extreme cases rather than clipping.
+            Text(title)
+                .font(.custom("Helvetica Neue", size: 17).weight(.medium))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .center)
 
-                // Leading back button overlaid on the same row.
-                HStack {
-                    Button(action: { onBack?() }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .frame(width: 18, height: 24)
-                    }
-                    .padding(.leading, 7)
-                    Spacer()
+            // Leading back button overlaid on the same row.
+            HStack {
+                Button(action: { onBack?() }) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 18, height: 24)
                 }
+                .padding(.leading, 7)
+                Spacer()
             }
-            .frame(height: 42)
-            .padding(.horizontal, 9)
         }
+        .frame(height: 42)
+        .padding(.horizontal, 9)
         .frame(maxWidth: .infinity)
+        // Dark → transparent gradient; extends up behind the status bar for legibility.
         .background(
             LinearGradient(
                 stops: [
-                    .init(color: Color(hex: "00101A"), location: 0),
-                    .init(color: Color(hex: "00101A").opacity(0.30), location: 0.7644),
-                    .init(color: Color(hex: "00101A").opacity(0.20), location: 0.8462),
-                    .init(color: Color(hex: "00101A").opacity(0.10), location: 0.9279),
-                    .init(color: Color(hex: "00101A").opacity(0), location: 1)
+                    .init(color: Color(hex: "00101A"),              location: 0),
+                    .init(color: Color(hex: "00101A").opacity(0.3), location: 0.764),
+                    .init(color: Color(hex: "00101A").opacity(0.1), location: 0.928),
+                    .init(color: .clear,                            location: 1.0)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
+            .ignoresSafeArea(edges: .top)
         )
-        .opacity(0.9)
     }
 }
 

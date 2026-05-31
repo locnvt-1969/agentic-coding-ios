@@ -141,8 +141,8 @@ final class HomeViewModel {
     func searchTapped(router: AppRouter) { router.push(.searchSunner) }                       // TC_IOS_HOME_FUN_020
     func bellTapped(router: AppRouter) { router.push(.notifications) }                         // TC_IOS_HOME_FUN_006
     func aboutAwardTapped(router: AppRouter) { router.push(.awardDetail(type: .topTalent)) }   // TC_IOS_HOME_FUN_007
-    func aboutKudosTapped(router: AppRouter) { router.push(.kudosBoard) }                      // TC_IOS_HOME_FUN_008
-    func kudosDetailTapped(router: AppRouter) { router.push(.kudosBoard) }                     // TC_IOS_HOME_FUN_011
+    func aboutKudosTapped(router: AppRouter) { router.push(.rules) }                           // TC_IOS_HOME_FUN_008 → Thể lệ
+    func kudosDetailTapped(router: AppRouter) { router.push(.rules) }                          // TC_IOS_HOME_FUN_011 → Thể lệ
     func fabSKudosTapped(router: AppRouter) { router.push(.allKudos) }                         // TC_IOS_HOME_FUN_014
 
     /// Award card "Chi tiết" → Award Detail for that award (TC_IOS_HOME_FUN_004).
