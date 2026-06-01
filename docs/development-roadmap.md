@@ -70,7 +70,7 @@ Last updated: 2026-06-01
 ---
 
 ## Phase 7 — Supabase API Integration (Kudo WRITE + interact + Secret Box + Notifications)
-**Status: In Progress (READ ✓ Batch 3, WRITE ✓ Batch 4, interact/viewKudo ✓ Batch 5; Secret Box/Notifications pending)**
+**Status: In Progress (READ ✓ Batch 3, WRITE ✓ Batch 4, interact/viewKudo ✓ Batch 5, Secret Box ✓ Batch 6; Notifications pending)**
 
 **Completed (2026-06-01, Batch 4):** Kudos WRITE (sendKudo + kudo_hashtags) + search/user-fetch wired to live DB.
 - `KudoService.sendKudo(title, message, recipientId, hashtags, senderAnon)` inserts kudo + junction entries; live verified
@@ -87,9 +87,15 @@ Last updated: 2026-06-01
 - Kudo detail shows real comments (read-only)
 - Build: SUCCEEDED · Review: DONE · End-to-end verified
 
-**Remaining (Batch 6+):** secret box + notifications + comment submission.
-- `KudoService`: spotlight/personalStats/giftRecipients; comment submission (`addComment`)
-- `SecretBoxService`: currentBox, openBox
+**Completed (2026-06-01, Batch 6):** Secret Box live + gamification EXECUTE security hardening.
+- `SecretBoxService.currentBox()` reads `secret_boxes` (closed count) via REST; live
+- `SecretBoxService.openBox(id:)` calls `open_secret_box(p_box_id)` RPC; DB function owns icon upsert; client reads returned `won_value_icon`; live
+- Migration `20260601001200`: EXECUTE revoked on `grant_national_kudos` (public/anon/authenticated), `open_secret_box` (public/anon), and 6 trigger/helper functions — closes systemic privilege-escalation gap
+- Dev seed: 5 closed boxes for `sunner@sun.com`
+- Build: SUCCEEDED · Security hardening: DONE
+
+**Remaining (Batch 7+):** notifications + comment submission.
 - `NotificationService`: listNotifications, markRead, unreadCount
+- `KudoService`: spotlight/personalStats/giftRecipients; comment submission (`addComment`)
 - Board hashtag/department filters (server-side RPC ready, UI wiring deferred)
 - Known issues: sendKudo non-transactional (consider `perform_send_kudo` RPC before prod); Kudo.title not rendered in card

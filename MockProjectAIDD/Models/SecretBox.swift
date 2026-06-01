@@ -20,6 +20,8 @@ struct SecretBox: Hashable, Codable {
 
     var state: State
     var reward: Gift?
+    /// Number of unopened boxes the user currently has (drives the closed-state count).
+    var availableCount: Int = 0
 
-    static let sample = SecretBox(state: .closed, reward: nil)
+    static let sample = SecretBox(state: .closed, reward: nil, availableCount: 5)
 }

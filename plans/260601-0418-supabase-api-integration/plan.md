@@ -47,7 +47,7 @@ Thay toàn bộ stub service bằng lệnh gọi Supabase thật, để mọi ch
 | P2 Auth | **DONE** | AuthService: real local email/password sign-in (GoTrue REST) + session restore + sign-out; JWT set on SupabaseRESTClient. Google OAuth dev alias (test user seeded); real Google OAuth deferred to prod. |
 | P3 Models/DTO | **DONE** | `SunValueIcon.dbId` + `init?(dbId:)`, `Kudo.title`, `ProfileDTO`, `KudoDTO` (recv/sender decode); full Kudo model alignment complete. |
 | P4 Read services | **DONE** | ContentService + KudoService.listAllKudos/listKudos/listReceivedKudos wired to list_kudos RPC. Board, All Kudos, Profile received-kudos sections verified w/ real data. Hashtag/department filters present in RPC, UI wiring pending (P6). |
-| P5 User services | **DONE** | UserService: fetchCurrentUser (get_profile RPC) + fetchProfileStats + fetchUser (get_profile) + searchSunners (ilike + dept embed) wired. KudoService: sendKudo (insert + kudo_hashtags) + listHashtags + **viewKudo (view_kudo RPC + comments)** + **react/unreact** (optimistic, per-id in-flight guard, rollback on error) wired live. FeatureFlags.useMockKudoData → false. SecretBox/Notification pending. |
+| P5 User services | **DONE** | UserService: fetchCurrentUser (get_profile RPC) + fetchProfileStats + fetchUser (get_profile) + searchSunners (ilike + dept embed) wired. KudoService: sendKudo (insert + kudo_hashtags) + listHashtags + **viewKudo (view_kudo RPC + comments)** + **react/unreact** (optimistic, per-id in-flight guard, rollback on error) wired live. **SecretBoxService: currentBox() + openBox() (RPC open_secret_box) wired live; boxes auto-granted by trigger, icon collection works (Batch 5).** FeatureFlags.useMockKudoData → false. NotificationService pending. |
 | P6 Integration & verify | **DONE** | P4 Kudos read ✓, P5 write/interact ✓ (compose → send, search → real users, other-profile → real data, viewKudo → comments, heart/un-heart → real reactions + optimistic UI). SecretBox + Notifications + board hashtag/dept filter pending. |
 
 **Increment 2 Batch 1 (Auth-Independent) — COMPLETED:**
@@ -70,8 +70,22 @@ Thay toàn bộ stub service bằng lệnh gọi Supabase thật, để mọi ch
 - ✅ Build: SUCCEEDED
 - ✅ Review: 0-critical (H1/M1 fixes applied)
 - ✅ End-to-end: compose → send inserts real kudo (appears on board); search → real users; other-profile → real data (curl + Kudos board screenshot verified)
-- **Still mock/flagged:** SecretBoxService; NotificationService
+- **Still mock/flagged:** NotificationService
 - **Non-transactional path:** sendKudo inserts kudo even if hashtag insert fails — consider perform_send_kudo RPC before prod
+
+**Increment 2 Batch 5 (Secret Box + gamification security hardening) — COMPLETED:**
+- ✅ `supabase/migrations/20260601001200_lock_gamification_functions.sql` — **SECURITY HARDENING:** revoked EXECUTE on `grant_national_kudos` from public/anon/authenticated (privilege escalation hole: any user could mint top-5 "Kudos Quốc Dân" rewards); revoked EXECUTE on `open_secret_box` from public/anon (authenticated kept); revoked EXECUTE on 6 trigger functions (grant_secret_boxes_on_heart, grant_icon_collection_reward, notify_kudo_received/reaction/award/reward) from all roles (internal DB-only, no PostgREST surface). Verified: grant_national_kudos→403 authenticated user, open_secret_box→401 anon, authenticated open works.
+- ✅ `supabase/seeds/dev/20_dev_gamification.sql` (registered in config.toml) — dev-only seed: 5 closed secret_boxes for test user (idempotent clear + insert)
+- ✅ `Models/SecretBox.swift` — added `availableCount: Int` property (tracks unopened box count from currentBox)
+- ✅ `Services/SecretBoxService.swift` — wired `currentBox()` → GET secret_boxes with state=closed + count (now returns real data); wired `openBox()` → RPC open_secret_box with oldest-box guard → returns Gift (icon label + id) or all-collected message
+- ✅ `ViewModels/SecretBoxViewModel.swift` — added guard `availableCount > 0` in open(); decrement availableCount after successful open
+- ✅ `Views/Containers/SecretBoxContainer.swift` + `AllKudosContainer.swift` — alert binding fixed (read-only .alert with get/set closure, no more `@State` var)
+- ✅ Build: SUCCEEDED
+- ✅ Review: 0-critical (all warnings fixed)
+- ✅ End-to-end: closed box count 5 → open → random icon won (FLOW TO HORIZON) → count decrements to 4 → collection grows; screenshot "Secret box chưa mở 05" verified
+- **CLOSES:** pre-prod hardening item "revoke PUBLIC EXECUTE on migration-700 functions / grant_national_kudos PUBLIC-callable" (security gate passed)
+- **Still pending:** NotificationService (stub); comment SUBMISSION (write); board hashtag/dept filter UI; Hero tier display; reward/national_kudos UI not surfaced
+- **Follow-up:** add `case opened` to SecretBox.State if full box row ever decoded (currently not — YAGNI-deferred)
 
 **Increment 2 Batch 4 (Kudo interactions READ + REACT/UNREACT) — COMPLETED:**
 - ✅ `supabase/migrations/20260601001100_kudo_interactions.sql` — shared `kudo_json(uuid)` builder (DRY, called by list_kudos + new view_kudo); `list_kudos` now carries `has_reacted` per viewer; new `view_kudo(p_id)` RPC returning kudo + comments via CTE (kudo_json + joined comments); EXECUTE revoked from public/anon/authenticated on kudo_json (internal), granted to authenticated for list_kudos/view_kudo

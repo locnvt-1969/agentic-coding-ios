@@ -294,9 +294,9 @@ Raw `kudos` is not client-readable; clients use `kudos_public` (sender nulled wh
 ## 5. Automation (business rules)
 
 - **Secret box grant (req 6)** — trigger `after insert/delete on kudo_reactions`: recompute the recipient-sender's total received hearts `H` (❤️ on their sent kudos); ensure `floor(H/5)` boxes exist for them (insert new `closed` boxes for the delta; never revoke on un-heart).
-- **Open box (req 6)** — RPC `open_secret_box(box_id)` (SECURITY DEFINER): set `state='opened'`, pick a **random value_icon the user does NOT yet own** (if all owned → no new icon), upsert `user_value_icons`, set `reward_value_icon_id`.
+- **Open box (req 6)** — RPC `open_secret_box(p_box_id)` (SECURITY DEFINER, `authenticated` only; EXECUTE revoked from public/anon via migration 20260601001200): sets `state='opened'`, picks a **random value_icon the user does NOT yet own** (if all owned → no new icon), upserts `user_value_icons`, sets `reward_value_icon_id`, returns `won_value_icon`. Client calls this RPC and reads the returned icon — never writes `user_value_icons` directly.
 - **Icon-collection gift (req 7)** — trigger `after insert on user_value_icons`: if the user now owns all 6 → insert `user_rewards('icon_collection')` (unique-guarded) + a `reward_granted` notification.
-- **National-kudos gift (req 8)** — RPC/scheduled `grant_national_kudos()`: take `v_national_kudos`, insert `user_rewards('national_kudos', kudo_id)` for each kudo's sender. Run at program close (not real-time).
+- **National-kudos gift (req 8)** — function `grant_national_kudos()` (SECURITY DEFINER): takes `v_national_kudos`, inserts `user_rewards('national_kudos', kudo_id)` for each kudo's sender. Run at program close (not real-time). **EXECUTE revoked from public/anon/authenticated** (migration 20260601001200) — not client-callable; must be invoked via `service_role` or a scheduled Edge Function.
 - **Hero tier (req 5)** — live via `v_user_hero_tier` (no storage).
 - **Notifications** — triggers: `kudos` insert → recipient `kudo_received`; `kudo_reactions` insert → sender `kudo_reaction`; `award_recipients`/`user_rewards` insert → `award_granted`/`reward_granted`.
 
@@ -323,8 +323,8 @@ Raw `kudos` is not client-readable; clients use `kudos_public` (sender nulled wh
 | `ContentService.communityStandards` | `content_sections` where doc='community_standards' |
 | `ContentService.rules` | `content_documents`='rules' + `hero_tiers` + `value_icons` |
 | `NotificationService.*` | `notifications` (list / mark read / unread count) |
-| `SecretBoxService.currentBox` | `secret_boxes` latest unopened |
-| `SecretBoxService.openBox` | RPC `open_secret_box` |
+| `SecretBoxService.currentBox` | `GET /rest/v1/secret_boxes?state=eq.closed&profile_id=eq.{uid}` — returns unopened count |
+| `SecretBoxService.openBox(id:)` | RPC `open_secret_box(p_box_id)` (`authenticated`; EXECUTE revoked from public/anon) → returns `won_value_icon`; DB upserts `user_value_icons` |
 
 ---
 

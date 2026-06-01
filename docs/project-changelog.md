@@ -2,6 +2,15 @@
 
 ## [Unreleased] — 2026-06-01
 
+### Added — Secret Box live + gamification security hardening (Increment 2 Batch 6)
+
+- **`SecretBoxService.currentBox()`** — live; `GET /rest/v1/secret_boxes` filtered to `state=closed` + authenticated user; returns unopened count displayed in UI
+- **`SecretBoxService.openBox(id:)`** — live; calls `open_secret_box(p_box_id)` Postgres RPC (SECURITY DEFINER, `authenticated`); RPC sets `state='opened'`, picks a random value icon not yet owned by the user, upserts `user_value_icons`, returns `won_value_icon`; client never mutates `user_value_icons` directly
+- **UI** — Secret Box screen shows real unopened count; opens box and reveals won icon from RPC response
+- **DB migration `20260601001200`** — EXECUTE hardening: revoked on `grant_national_kudos` (public/anon/authenticated — function no longer client-callable; privilege-escalation path closed), `open_secret_box` (public/anon; authenticated kept), and 6 trigger/helper functions (public/anon/authenticated). Closes the systemic Supabase default-privilege gap flagged since Batch 1 (`grant_national_kudos` was previously PUBLIC-callable).
+- **Dev seed** — 5 closed secret boxes added for `sunner@sun.com` test account
+- Build: SUCCEEDED · Security: privilege-escalation vector on `grant_national_kudos` closed
+
 ### Added — Kudo interaction: react/unreact + viewKudo + comments (Increment 2 Batch 5)
 
 - **DB migration** — `view_kudo(p_id uuid)` Postgres RPC (SECURITY DEFINER, `authenticated`): returns one kudo JSON + its comments array via shared `kudo_json` helper

@@ -26,13 +26,14 @@ final class SecretBoxViewModel {
 
     /// State machine: closed → opening → standby (with reward).
     func open() async {
-        guard !isInFlight, box.state == .closed else { return }
+        guard !isInFlight, box.state == .closed, box.availableCount > 0 else { return }
         isInFlight = true
         defer { isInFlight = false }
         box.state = .opening
         do {
             let reward = try await SecretBoxService.shared.openBox()
             box.reward = reward
+            box.availableCount = max(0, box.availableCount - 1)
             box.state = .standby
         } catch {
             errorMessage = error.localizedDescription

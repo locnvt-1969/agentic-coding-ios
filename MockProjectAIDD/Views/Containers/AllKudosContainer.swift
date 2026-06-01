@@ -33,8 +33,14 @@ struct AllKudosContainer: View {
         .task {
             await vm.load()
         }
-        .alert("Lỗi", isPresented: .constant(vm.errorMessage != nil)) {
-            Button("OK") { vm.errorMessage = nil }
+        .alert(
+            "Lỗi",
+            isPresented: Binding(
+                get: { vm.errorMessage != nil },
+                set: { if !$0 { vm.errorMessage = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
         } message: {
             Text(vm.errorMessage ?? "")
         }
