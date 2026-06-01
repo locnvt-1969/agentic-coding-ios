@@ -33,6 +33,7 @@ struct KudosHighlightSection: View {
     let onSelectDepartment: (Department?) -> Void
 
     let onOpenKudo: (Kudo) -> Void
+    var onToggleReaction: (Kudo) -> Void = { _ in }
 
     // MARK: Local dropdown visibility
     @State private var showHashtagDropdown = false
@@ -129,7 +130,8 @@ struct KudosHighlightSection: View {
                     KudoCard(
                         kudo: kudo,
                         onCopyLink: {},
-                        onViewDetail: { k in onOpenKudo(k) }
+                        onViewDetail: { k in onOpenKudo(k) },
+                        onToggleReaction: { k in onToggleReaction(k) }
                     )
                     .padding(.horizontal, 20)
                     .tag(index)

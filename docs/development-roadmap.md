@@ -42,16 +42,18 @@ Last updated: 2026-06-01
 
 ---
 
-## Phase 5 — Kudos Screen (READ API wired)
-**Status: In Progress (READ path live; WRITE/interact pending)**
+## Phase 5 — Kudos Screen (READ + interact API wired)
+**Status: In Progress (READ ✓, react/unreact ✓, viewKudo ✓; spotlight/stats/giftRecipients pending)**
 
 - `KudosBoardView` + sub-sections: `SpotlightBoardSection` (388 Kudos stat, chart image, non-functional search), `KudosStatsBlock` (personal received/sent counts, heart + x2-fire badge, Secret Box opened/unopened), `GiftRecipientsList` (Top-10 gift recipients)
 - `KudosStats`, `GiftRecipient` models added
-- `KudoService` — `listAllKudos(page)` + `listKudos()` + `listReceivedKudos(userId)` wired to live `list_kudos` RPC (DB); mock extension removed
+- `KudoService` — `listAllKudos(page)` + `listKudos()` + `listReceivedKudos(userId)` wired to live `list_kudos` RPC (DB); RPC now returns `has_reacted` per user
+- `KudoService.viewKudo(id:)` — live; calls `view_kudo` RPC; returns kudo + comments
+- `KudoService.react` / `unreact` — live; POST / DELETE to `kudo_reactions`; optimistic toggle with in-flight guard and rollback
+- `Kudo.hasReacted` — new model field; ❤️ button on board tappable; kudo detail shows comments (read-only)
 - `ProfileViewModel` — kudos property reads RECEIVED kudos; received/sent counts from live `v_kudos_stats` view
-- Board feed, All Kudos, Profile kudos sections show real DB data (anonymity, hashtags, hearts, dates correct)
-- Build: SUCCEEDED · Review: 7/10 0-critical · End-to-end verified (curl + Kudos board screenshot)
-- **Known follow-ups:** Spotlight search / Top-10 tap / heart button remain visual-only (sendKudo/react/viewKudo in Phase 7); board hashtag/dept filters not wired (UI ignores); Kudo.title rendering in KudoCard deferred (P6)
+- Build: SUCCEEDED · Review: DONE · End-to-end verified
+- **Known follow-ups:** Spotlight search / Top-10 tap remain non-functional; board hashtag/dept filters not wired; Kudo.title rendering in KudoCard deferred; comment submission deferred
 
 ---
 
@@ -67,19 +69,27 @@ Last updated: 2026-06-01
 
 ---
 
-## Phase 7 — Supabase API Integration (Kudo WRITE + Secret Box + Notifications)
-**Status: In Progress (READ ✓ Batch 3, WRITE ✓ Batch 4; react/Secret Box/Notifications pending)**
+## Phase 7 — Supabase API Integration (Kudo WRITE + interact + Secret Box + Notifications)
+**Status: In Progress (READ ✓ Batch 3, WRITE ✓ Batch 4, interact/viewKudo ✓ Batch 5; Secret Box/Notifications pending)**
 
 **Completed (2026-06-01, Batch 4):** Kudos WRITE (sendKudo + kudo_hashtags) + search/user-fetch wired to live DB.
 - `KudoService.sendKudo(title, message, recipientId, hashtags, senderAnon)` inserts kudo + junction entries; live verified
 - `KudoService.listHashtags()` reads live hashtags table
 - `UserService.fetchUser(userId)` + `searchSunners(query)` read live profiles + dept; verified end-to-end
 - `SendKudoViewModel` wired to live flow; `FeatureFlags.useMockKudoData = false`
-- Build: SUCCEEDED · Review: 0-critical · End-to-end: compose → send inserts real kudo (appears on feed); search → real users; other-profile → real data (verified)
+- Build: SUCCEEDED · Review: 0-critical · End-to-end: compose → send inserts real kudo (appears on feed)
 
-**Remaining user-context services (Batch 5+):** react/unreact + viewKudo + secret box + notifications.
-- `KudoService`: viewKudo (detail + comments), react/unreact, spotlight/personalStats/giftRecipients
+**Completed (2026-06-01, Batch 5):** react/unreact + viewKudo + comments wired to live DB.
+- `view_kudo(p_id)` RPC added; `list_kudos` extended with `has_reacted`; `kudo_json` internal helper (non-callable)
+- `SupabaseRESTClient.delete(_:query:)` added
+- `KudoService.react` / `unreact` live; `KudoService.viewKudo` live
+- Optimistic toggle with in-flight guard + rollback in board and detail ViewModels
+- Kudo detail shows real comments (read-only)
+- Build: SUCCEEDED · Review: DONE · End-to-end verified
+
+**Remaining (Batch 6+):** secret box + notifications + comment submission.
+- `KudoService`: spotlight/personalStats/giftRecipients; comment submission (`addComment`)
 - `SecretBoxService`: currentBox, openBox
 - `NotificationService`: listNotifications, markRead, unreadCount
-- Board hashtag/department filters (server-side RPC ready, UI wiring deferred to P6)
-- Known issues: viewKudo still mock (tapping real kudo errors notFound); sendKudo non-transactional (hashtag insert failure doesn't roll back kudo); Kudo.title not rendered in card
+- Board hashtag/department filters (server-side RPC ready, UI wiring deferred)
+- Known issues: sendKudo non-transactional (consider `perform_send_kudo` RPC before prod); Kudo.title not rendered in card

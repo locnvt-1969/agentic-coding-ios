@@ -47,8 +47,8 @@ Thay toàn bộ stub service bằng lệnh gọi Supabase thật, để mọi ch
 | P2 Auth | **DONE** | AuthService: real local email/password sign-in (GoTrue REST) + session restore + sign-out; JWT set on SupabaseRESTClient. Google OAuth dev alias (test user seeded); real Google OAuth deferred to prod. |
 | P3 Models/DTO | **DONE** | `SunValueIcon.dbId` + `init?(dbId:)`, `Kudo.title`, `ProfileDTO`, `KudoDTO` (recv/sender decode); full Kudo model alignment complete. |
 | P4 Read services | **DONE** | ContentService + KudoService.listAllKudos/listKudos/listReceivedKudos wired to list_kudos RPC. Board, All Kudos, Profile received-kudos sections verified w/ real data. Hashtag/department filters present in RPC, UI wiring pending (P6). |
-| P5 User services | **DONE (WRITE path)** | UserService: fetchCurrentUser (get_profile RPC) + fetchProfileStats + **fetchUser (get_profile)** + **searchSunners (ilike + dept embed)** wired; live DB verified. KudoService: **sendKudo (insert + kudo_hashtags)** + **listHashtags** wired live. FeatureFlags.useMockKudoData → false. React/unreact/viewKudo/SecretBox/Notification pending. |
-| P6 Integration & verify | partial | P4 Kudos read ✓, P5 write ✓ (compose → send inserts real kudo, search → real users, other-profile → real data). viewKudo still mock (flag-flip reachable, errors notFound). React/unreact UI + SecretBox + Notifications + board filters pending. |
+| P5 User services | **DONE** | UserService: fetchCurrentUser (get_profile RPC) + fetchProfileStats + fetchUser (get_profile) + searchSunners (ilike + dept embed) wired. KudoService: sendKudo (insert + kudo_hashtags) + listHashtags + **viewKudo (view_kudo RPC + comments)** + **react/unreact** (optimistic, per-id in-flight guard, rollback on error) wired live. FeatureFlags.useMockKudoData → false. SecretBox/Notification pending. |
+| P6 Integration & verify | **DONE** | P4 Kudos read ✓, P5 write/interact ✓ (compose → send, search → real users, other-profile → real data, viewKudo → comments, heart/un-heart → real reactions + optimistic UI). SecretBox + Notifications + board hashtag/dept filter pending. |
 
 **Increment 2 Batch 1 (Auth-Independent) — COMPLETED:**
 - ✅ `supabase/migrations/20260601000800_get_profile_rpc.sql` — `get_profile(p_id)` RPC (composed profile JSON: user + dept + hero tier + icons + stats), SECURITY DEFINER, grant to `authenticated` only (PUBLIC execute revoked)
@@ -70,8 +70,23 @@ Thay toàn bộ stub service bằng lệnh gọi Supabase thật, để mọi ch
 - ✅ Build: SUCCEEDED
 - ✅ Review: 0-critical (H1/M1 fixes applied)
 - ✅ End-to-end: compose → send inserts real kudo (appears on board); search → real users; other-profile → real data (curl + Kudos board screenshot verified)
-- **Still mock/flagged:** viewKudo (detail + comments); react/unreact; SecretBoxService; NotificationService
+- **Still mock/flagged:** SecretBoxService; NotificationService
 - **Non-transactional path:** sendKudo inserts kudo even if hashtag insert fails — consider perform_send_kudo RPC before prod
+
+**Increment 2 Batch 4 (Kudo interactions READ + REACT/UNREACT) — COMPLETED:**
+- ✅ `supabase/migrations/20260601001100_kudo_interactions.sql` — shared `kudo_json(uuid)` builder (DRY, called by list_kudos + new view_kudo); `list_kudos` now carries `has_reacted` per viewer; new `view_kudo(p_id)` RPC returning kudo + comments via CTE (kudo_json + joined comments); EXECUTE revoked from public/anon/authenticated on kudo_json (internal), granted to authenticated for list_kudos/view_kudo
+- ✅ `Models/Kudo.swift` + `DTOs/KudoDTO.swift` — added `hasReacted: Bool` property + JSON mapping
+- ✅ `SupabaseRESTClient` — added `delete(endpoint, queryParams)` with empty-query guard
+- ✅ `KudoService` — **viewKudo(kudoId)** → view_kudo RPC (kudo + all comments with author); **react(kudoId)** + **unreact(kudoId)** (insert/delete kudo_reactions); optimistic state mgmt in ViewModels
+- ✅ `KudosBoardViewModel.toggleReaction(kudoId)` — optimistic toggle w/ per-id in-flight guard, rollback on error
+- ✅ `ViewKudoViewModel.toggleReaction(kudoId)` — same pattern, tappable ❤️ action bar
+- ✅ UI wiring: tappable ❤️ on KudosBoardViewModel (board + All Kudos highlight cards) + ViewKudoViewModel action bar; filled/outline reflects has_reacted
+- ✅ Seed: `supabase/seeds/dev/10_dev_kudos.sql` now seeds kudo_comment for detail screen real content
+- ✅ Build: SUCCEEDED
+- ✅ Review: 0-critical (H1/H2/M1/M2/H3/L1 fixes applied + re-verified DONE)
+- ✅ End-to-end: curl list_kudos → has_reacted per session; detail screen shows comments; heart tap → optimistic ❤️ filled, DB updates, unbeat rolls back on failure (screenshot + curl verified)
+- **Still pending:** board hashtag/dept server-side filter (RPC present, UI wiring skipped); Secret Box / Notifications not yet wired; comment SUBMISSION (write) still TODO (only comment READ this batch)
+- **Pre-prod hardening:** JWT refresh+Keychain, perform_send_kudo transaction, dev creds behind #if DEBUG
 
 **Increment 2 Batch 3 (Kudos READ) — COMPLETED:**
 - ✅ `supabase/migrations/20260601000900_list_kudos_rpc.sql` + `20260601001000_list_kudos_filters.sql` — `list_kudos(p_limit, p_offset, p_recipient, p_sender)` RPC composes kudos JSON from `kudos_public` view, page-size capped, optional recipient/sender filters for board + profile filtering

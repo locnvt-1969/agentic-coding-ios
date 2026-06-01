@@ -86,6 +86,25 @@ actor SupabaseRESTClient {
         try await sendNoContent(request)
     }
 
+    // MARK: - Delete (DELETE table?filter)
+
+    func delete(_ table: String, query: [URLQueryItem]) async throws {
+        // Refuse an unfiltered DELETE — without a filter PostgREST would wipe the table.
+        guard !query.isEmpty else { throw SupabaseRESTError.invalidURL }
+        guard var components = URLComponents(
+            url: SupabaseConfig.restURL.appendingPathComponent(table),
+            resolvingAgainstBaseURL: false
+        ) else { throw SupabaseRESTError.invalidURL }
+        components.queryItems = query
+        guard let url = components.url else { throw SupabaseRESTError.invalidURL }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        applyHeaders(&request)
+        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+        try await sendNoContent(request)
+    }
+
     // MARK: - Shared execution
 
     private func sendNoContent(_ request: URLRequest) async throws {

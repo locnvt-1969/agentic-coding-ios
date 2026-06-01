@@ -30,6 +30,7 @@ struct KudosBoardView: View {
     var onSelectHashtag: (Hashtag?) -> Void
     var onSelectDepartment: (Department?) -> Void
     var onOpenKudo: (Kudo) -> Void
+    var onToggleReaction: (Kudo) -> Void = { _ in }
     var onSendKudo: (() -> Void)? = nil
     var onOpenSecretBox: () -> Void = {}
     var onViewAll: () -> Void = {}
@@ -100,7 +101,8 @@ struct KudosBoardView: View {
                                     selectedDepartment = dept
                                     onSelectDepartment(dept)
                                 },
-                                onOpenKudo: onOpenKudo
+                                onOpenKudo: onOpenKudo,
+                                onToggleReaction: onToggleReaction
                             )
                             .padding(.top, 24)
                             .zIndex(1)
@@ -114,6 +116,7 @@ struct KudosBoardView: View {
                                 giftRecipients: giftRecipients,
                                 onOpenSecretBox: onOpenSecretBox,
                                 onOpenKudo: onOpenKudo,
+                                onToggleReaction: onToggleReaction,
                                 onViewAll: onViewAll
                             )
                             .padding(.top, 24)

@@ -16,6 +16,7 @@ struct KudoCard: View {
     let kudo: Kudo
     var onCopyLink: (() -> Void)?
     var onViewDetail: ((Kudo) -> Void)?
+    var onToggleReaction: ((Kudo) -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -25,6 +26,8 @@ struct KudoCard: View {
             Divider().background(Color.kudosBorder)
             KudoCardActions(
                 reactionCount: kudo.reactionCount,
+                isReacted: kudo.hasReacted,
+                onToggleReaction: onToggleReaction.map { action in { action(kudo) } },
                 onCopyLink: onCopyLink,
                 onViewDetail: onViewDetail.map { action in { action(kudo) } }
             )

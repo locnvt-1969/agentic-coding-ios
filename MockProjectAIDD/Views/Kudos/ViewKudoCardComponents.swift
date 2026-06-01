@@ -62,6 +62,7 @@ struct ViewKudoImageStrip: View {
 
 struct ViewKudoActionBar: View {
     let reactionCount: Int
+    var isReacted: Bool = false
     var onReact: () -> Void
 
     var body: some View {
@@ -73,7 +74,7 @@ struct ViewKudoActionBar: View {
                         .font(.custom("Montserrat", size: 10))
                         .fontWeight(.regular)
                         .foregroundStyle(Color.kudosDark)
-                    Image(systemName: "heart.fill")
+                    Image(systemName: isReacted ? "heart.fill" : "heart")
                         .font(.system(size: 10))
                         .foregroundStyle(Color.kudosHashtag)
                 }

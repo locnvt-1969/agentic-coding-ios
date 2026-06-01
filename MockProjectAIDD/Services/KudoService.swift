@@ -70,11 +70,30 @@ final class KudoService {
     }
 
     func viewKudo(id: String) async throws -> Kudo {
-        // TODO: Supabase — fetch kudo by id.
-        guard let kudo = Self.mockKudos.first(where: { $0.id == id }) else {
-            throw KudoError.notFound
+        let dto = try await SupabaseRESTClient.shared.callRPC(
+            "view_kudo", body: ["p_id": id], as: KudoDTO?.self
+        )
+        guard let dto else { throw KudoError.notFound }
+        return dto.toKudo()
+    }
+
+    /// Add the current user's ❤️ to a kudo (no-op-safe: unique(kudo_id, profile_id)).
+    func react(kudoId: String) async throws {
+        guard let uid = AuthService.shared.currentUserId else {
+            throw KudoError.sendFailed("Bạn cần đăng nhập.")
         }
-        return kudo
+        try await SupabaseRESTClient.shared.insert("kudo_reactions", values: ["kudo_id": kudoId, "profile_id": uid])
+    }
+
+    /// Remove the current user's ❤️ from a kudo.
+    func unreact(kudoId: String) async throws {
+        guard let uid = AuthService.shared.currentUserId else {
+            throw KudoError.sendFailed("Bạn cần đăng nhập.")
+        }
+        try await SupabaseRESTClient.shared.delete("kudo_reactions", query: [
+            URLQueryItem(name: "kudo_id", value: "eq.\(kudoId)"),
+            URLQueryItem(name: "profile_id", value: "eq.\(uid)")
+        ])
     }
 
     func sendKudo(_ payload: SendKudoPayload) async throws {

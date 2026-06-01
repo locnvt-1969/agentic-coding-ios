@@ -22,6 +22,7 @@ struct KudosAllSection: View {
     let giftRecipients: [GiftRecipient]
     let onOpenSecretBox: () -> Void
     let onOpenKudo: (Kudo) -> Void
+    var onToggleReaction: (Kudo) -> Void = { _ in }
     var onViewAll: () -> Void = {}
 
     var body: some View {
@@ -46,7 +47,8 @@ struct KudosAllSection: View {
                         KudoCard(
                             kudo: kudo,
                             onCopyLink: {},
-                            onViewDetail: { k in onOpenKudo(k) }
+                            onViewDetail: { k in onOpenKudo(k) },
+                            onToggleReaction: { k in onToggleReaction(k) }
                         )
                         .padding(.horizontal, 20)
                     }

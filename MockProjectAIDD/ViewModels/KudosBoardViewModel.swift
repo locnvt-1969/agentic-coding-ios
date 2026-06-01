@@ -18,6 +18,9 @@ final class KudosBoardViewModel {
     var errorMessage: String?
 
     private var isInFlight = false
+    // Kudo ids with an in-flight react/unreact — blocks double-tap on the same card
+    // while still allowing concurrent reactions on different cards.
+    private var reactionsInFlight: Set<String> = []
 
     func load() async {
         guard !isInFlight else { return }
@@ -64,6 +67,37 @@ final class KudosBoardViewModel {
             kudos = try await KudoService.shared.listKudos(filter: filter)
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Toggle the current user's ❤️ on a kudo. Optimistic: the heart flips and the
+    /// count adjusts immediately, then we persist; on failure we roll the card back.
+    /// Guarded per kudo id so a rapid double-tap can't fire overlapping calls.
+    func toggleReaction(_ kudo: Kudo) {
+        let kudoId = kudo.id
+        guard !reactionsInFlight.contains(kudoId),
+              let idx = kudos.firstIndex(where: { $0.id == kudoId }) else { return }
+        reactionsInFlight.insert(kudoId)
+        let wasReacted = kudos[idx].hasReacted
+        kudos[idx].hasReacted = !wasReacted
+        kudos[idx].reactionCount += wasReacted ? -1 : 1
+        Task {
+            defer { reactionsInFlight.remove(kudoId) }
+            do {
+                if wasReacted {
+                    try await KudoService.shared.unreact(kudoId: kudoId)
+                } else {
+                    try await KudoService.shared.react(kudoId: kudoId)
+                }
+            } catch {
+                // Roll back the optimistic change if the server rejected it. If load()
+                // replaced the array meanwhile, the guard drops the rollback — intentional,
+                // the reload is ground truth.
+                guard let revertIdx = kudos.firstIndex(where: { $0.id == kudoId }) else { return }
+                kudos[revertIdx].hasReacted = wasReacted
+                kudos[revertIdx].reactionCount += wasReacted ? 1 : -1
+                errorMessage = error.localizedDescription
+            }
         }
     }
 }

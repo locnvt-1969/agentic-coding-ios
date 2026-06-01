@@ -68,7 +68,7 @@ struct ViewKudoHighlightCard: View {
                 .frame(height: 1)
 
             // Action bar: heart count | copy link | view detail
-            ViewKudoActionBar(reactionCount: kudo.reactionCount, onReact: onReact)
+            ViewKudoActionBar(reactionCount: kudo.reactionCount, isReacted: kudo.hasReacted, onReact: onReact)
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)

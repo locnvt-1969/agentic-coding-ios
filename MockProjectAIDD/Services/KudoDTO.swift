@@ -15,9 +15,11 @@ struct KudoDTO: Decodable {
     let isSpam: Bool
     let reactionCount: Int
     let createdAt: String?
+    let hasReacted: Bool
     let sender: UserRef?
     let recipient: UserRef?
     let hashtags: [HashtagRef]
+    let comments: [CommentRef]?   // present only from view_kudo (detail)
 
     struct UserRef: Decodable {
         let id: String
@@ -28,6 +30,13 @@ struct KudoDTO: Decodable {
     struct HashtagRef: Decodable {
         let id: String
         let name: String
+    }
+
+    struct CommentRef: Decodable {
+        let id: String
+        let text: String
+        let createdAt: String?
+        let author: UserRef
     }
 
     func toKudo() -> Kudo {
@@ -41,7 +50,16 @@ struct KudoDTO: Decodable {
             isAnonymous: isAnonymous,
             createdAt: Self.parseTimestamp(createdAt),
             reactionCount: reactionCount,
-            isSpam: isSpam
+            comments: (comments ?? []).map {
+                KudoComment(
+                    id: $0.id,
+                    author: User(id: $0.author.id, name: $0.author.fullName, departmentName: $0.author.departmentName),
+                    text: $0.text,
+                    createdAt: Self.parseTimestamp($0.createdAt)
+                )
+            },
+            isSpam: isSpam,
+            hasReacted: hasReacted
         )
     }
 

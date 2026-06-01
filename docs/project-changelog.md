@@ -2,6 +2,23 @@
 
 ## [Unreleased] — 2026-06-01
 
+### Added — Kudo interaction: react/unreact + viewKudo + comments (Increment 2 Batch 5)
+
+- **DB migration** — `view_kudo(p_id uuid)` Postgres RPC (SECURITY DEFINER, `authenticated`): returns one kudo JSON + its comments array via shared `kudo_json` helper
+- **DB migration** — `list_kudos` RPC extended: now returns `has_reacted` boolean (true if `auth.uid()` has a row in `kudo_reactions` for that kudo)
+- **DB migration** — `kudo_json(uuid)` internal SQL helper (SECURITY DEFINER): single source of truth for kudo JSON composition from `kudos_public`; EXECUTE revoked from public/anon/authenticated — called only by `list_kudos` / `view_kudo`, not a callable RPC endpoint
+- **REST surface** — `POST /rest/v1/kudo_reactions` (react); `DELETE /rest/v1/kudo_reactions?kudo_id=eq.{id}&profile_id=eq.{id}` (unreact)
+- `SupabaseRESTClient` — added `delete(_:query:)` method; guards against empty/unfiltered query to prevent accidental full-table deletes
+- `Kudo.hasReacted: Bool` — new model field decoded from `has_reacted` in `list_kudos` / `view_kudo` RPC response
+- `KudoService.viewKudo(id:)` — now live; calls `view_kudo` RPC; decodes kudo + comments
+- `KudoService.react(kudoId:)` / `unreact(kudoId:)` — live; POST / DELETE to `kudo_reactions` REST endpoint
+- `KudosBoardViewModel` + `ViewKudoViewModel` — optimistic react/unreact toggle; in-flight guard (prevents double-tap); rollback on error
+- `KudosBoardView` — ❤️ button on `KudoCard` is tappable and reflects `hasReacted` state
+- `ViewKudoView` / `ViewKudoContainer` — kudo detail screen now shows comments (read-only); comment submission deferred
+- Seed: added sample `kudo_comment` row
+- Build: SUCCEEDED · Review: DONE · End-to-end: react/unreact toggled via curl + UI; kudo detail renders real comments
+- **Known follow-ups:** comment submission (`KudoService.addComment`); `spotlightTotalKudos` / `fetchPersonalStats` / `listGiftRecipients` remain stubbed; `SecretBoxService`; `NotificationService`
+
 ### Added — Kudos WRITE + Search/Hashtags API wired to live DB (Increment 2 Batch 4)
 
 - `SupabaseRESTClient` — added `insert(endpoint, payload)` method (POST /rest/v1/<table>, return=minimal to avoid payload bloat)

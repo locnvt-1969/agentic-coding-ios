@@ -55,3 +55,9 @@ insert into public.kudo_reactions (kudo_id, profile_id) values
     ('11111111-0000-0000-0000-000000000001','1628681b-1e3d-42aa-98ee-bfc315b1503b'),
     ('11111111-0000-0000-0000-000000000002','1628681b-1e3d-42aa-98ee-bfc315b1503b'),
     ('11111111-0000-0000-0000-000000000004','b0000000-0000-0000-0000-000000000002');
+
+-- ── comments — so the Kudo detail screen has real comment content ────────────
+delete from public.kudo_comments where id = 'dddddddd-0000-0000-0000-000000000001';
+insert into public.kudo_comments (id, kudo_id, author_id, text, created_at) values
+    ('dddddddd-0000-0000-0000-000000000001','11111111-0000-0000-0000-000000000001',
+     'b0000000-0000-0000-0000-000000000002','Chúc mừng nhé!', '2026-06-01T02:38:00Z');

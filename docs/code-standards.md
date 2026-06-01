@@ -102,7 +102,7 @@ func doAction() async {
 ## Supabase Integration
 
 - `AuthService` wraps all auth calls. ViewModels and Views never import Supabase directly.
-- Backend transport: `SupabaseRESTClient` (`actor`, `static let shared`) — the canonical PostgREST client. Use it in new services; do not construct raw `URLRequest` + `URLSession` inline. No Supabase Swift SDK currently. Supports `GET` queries, `callRPC` (POST `/rpc/<name>`) for Postgres functions, and `insert(_:values:)` (POST to a table, `Prefer: return=minimal`) for writes.
+- Backend transport: `SupabaseRESTClient` (`actor`, `static let shared`) — the canonical PostgREST client. Use it in new services; do not construct raw `URLRequest` + `URLSession` inline. No Supabase Swift SDK currently. Supports `GET` queries, `callRPC` (POST `/rpc/<name>`) for Postgres functions, `insert(_:values:)` (POST to a table, `Prefer: return=minimal`) for writes, and `delete(_:query:)` (DELETE with mandatory non-empty query guard — prevents accidental full-table deletes) for row removal.
 - `AuthService.signIn(email:password:)` calls GoTrue (`POST /auth/v1/token`), persists the JWT, and calls `SupabaseRESTClient.shared.setAccessToken(_:)` — RLS sees `auth.uid()` from that point. Sign-out calls `setAccessToken(nil)`.
 - Services that need authenticated reads rely on the token set by `AuthService`; the client falls back to the anon key for unauthenticated reads.
 - OAuth redirect URL scheme: `com.mockprojectaidd://login-callback` — must be registered in Xcode project Info → URL Types.

@@ -41,6 +41,9 @@ struct KudosBoardContainer: View {
             onOpenKudo: { kudo in
                 router.push(.viewKudo(id: kudo.id))
             },
+            onToggleReaction: { kudo in
+                vm.toggleReaction(kudo)
+            },
             onSendKudo: {
                 router.push(.sendKudo)
             },

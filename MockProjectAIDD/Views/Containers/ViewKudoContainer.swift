@@ -25,7 +25,7 @@ struct ViewKudoContainer: View {
                         // TODO phase-19+: wire comment submission into VM when endpoint exists
                     },
                     onReact: {
-                        // TODO phase-19+: wire reaction into VM when endpoint exists
+                        vm.toggleReaction()
                     }
                 )
             } else if vm.errorMessage != nil {

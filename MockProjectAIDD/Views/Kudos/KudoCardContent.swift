@@ -81,23 +81,32 @@ struct KudoCardContent: View {
 
 struct KudoCardActions: View {
     let reactionCount: Int
+    var isReacted: Bool = false
+    var onToggleReaction: (() -> Void)?
     var onCopyLink: (() -> Void)?
     var onViewDetail: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 0) {
-            // Hearts group — width 44, height 16, gap 1.85
-            HStack(spacing: 1.85) {
-                Text(reactionCount.formatted())
-                    .font(.custom("Montserrat", size: 10))
-                    .fontWeight(.regular)
-                    .foregroundStyle(Color.kudosDark)
-                Image(systemName: "heart.fill")
-                    .resizable()
-                    .frame(width: 16, height: 16)
-                    .foregroundStyle(Color.kudosHashtag)
+            // Hearts group — count + heart; tappable when onToggleReaction is provided.
+            Button {
+                onToggleReaction?()
+            } label: {
+                HStack(spacing: 1.85) {
+                    Text(reactionCount.formatted())
+                        .font(.custom("Montserrat", size: 10))
+                        .fontWeight(.regular)
+                        .foregroundStyle(Color.kudosDark)
+                    Image(systemName: isReacted ? "heart.fill" : "heart")
+                        .resizable()
+                        .frame(width: 16, height: 16)
+                        .foregroundStyle(Color.kudosHashtag)
+                }
+                .frame(width: 44, height: 16, alignment: .leading)
+                .contentShape(Rectangle())
             }
-            .frame(width: 44, height: 16, alignment: .leading)
+            .buttonStyle(.plain)
+            .disabled(onToggleReaction == nil)
 
             Spacer()
 
