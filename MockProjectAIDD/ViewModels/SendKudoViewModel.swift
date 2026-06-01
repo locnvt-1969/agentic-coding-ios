@@ -44,7 +44,12 @@ final class SendKudoViewModel {
             return
         }
         do {
-            availableHashtags = try await KudoService.shared.listHashtags()
+            // Preload hashtags + an initial recipient list so the dropdowns aren't empty
+            // before the user types (the recipient picker has no inline search field).
+            async let tags = KudoService.shared.listHashtags()
+            async let people = UserService.shared.searchSunners(query: "")
+            availableHashtags = try await tags
+            availableRecipients = try await people
         } catch {
             errorMessage = error.localizedDescription
         }

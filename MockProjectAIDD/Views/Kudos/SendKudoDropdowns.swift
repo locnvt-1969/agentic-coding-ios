@@ -52,9 +52,15 @@ struct SendKudoRecipientDropdown: View {
                 .onTapGesture { onDismiss() }
 
             DropdownShell {
-                ForEach(items) { user in
-                    RecipientDropdownRow(user: user, onTap: { onSelect(user) })
+                // Scrollable so the full directory fits without overflowing the screen.
+                ScrollView(.vertical, showsIndicators: true) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(items) { user in
+                            RecipientDropdownRow(user: user, onTap: { onSelect(user) })
+                        }
+                    }
                 }
+                .frame(maxHeight: 300)
             }
         }
     }

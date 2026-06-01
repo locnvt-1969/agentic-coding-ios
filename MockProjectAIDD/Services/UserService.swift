@@ -53,25 +53,19 @@ final class UserService {
         return rows.first ?? .zero
     }
 
+    /// Diacritic-insensitive Sunner search via the search_profiles RPC (so "Nguyen"
+    /// matches "Nguyễn"). An empty query returns the first page of the directory —
+    /// used to populate the recipient picker before the user types.
     func searchSunners(query: String) async throws -> [User] {
-        // Strip PostgREST ilike wildcards (*, .) so a "*"-only query can't dump the directory.
-        let q = query.trimmingCharacters(in: .whitespaces)
-            .replacingOccurrences(of: "*", with: "")
-            .replacingOccurrences(of: ".", with: "")
-        guard !q.isEmpty else { return [] }
-        let rows = try await SupabaseRESTClient.shared.get(
-            "profiles",
-            query: [
-                URLQueryItem(name: "select", value: "id,full_name,avatar_url,role,departments(name)"),
-                URLQueryItem(name: "full_name", value: "ilike.*\(q)*"),
-                URLQueryItem(name: "limit", value: "20")
-            ],
+        let rows = try await SupabaseRESTClient.shared.callRPC(
+            "search_profiles",
+            body: ["p_query": query.trimmingCharacters(in: .whitespaces), "p_limit": 50],
             as: [SunnerRow].self
         )
         return rows.map {
             User(id: $0.id, name: $0.fullName,
                  avatarURL: $0.avatarUrl.flatMap { URL(string: $0) },
-                 departmentName: $0.departments?.name, role: $0.role)
+                 departmentName: $0.departmentName, role: $0.role)
         }
     }
 
@@ -86,13 +80,12 @@ final class UserService {
         )
     }
 
-    /// Decode shape for the sunner search (profiles row + embedded department).
+    /// Decode shape for the search_profiles RPC (flat row, snake_case → camelCase).
     private struct SunnerRow: Decodable {
         let id: String
         let fullName: String
         let avatarUrl: String?
         let role: String?
-        let departments: Dept?
-        struct Dept: Decodable { let name: String }
+        let departmentName: String?
     }
 }
