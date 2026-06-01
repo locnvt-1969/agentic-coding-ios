@@ -10,8 +10,7 @@ final class ProfileViewModel {
     var user: User?
     var stats: ProfileStatsData = .zero
     var kudos: [Kudo] = []
-    /// Counts on the kudos filter labels = size of the currently-loaded list (design: "Đã gửi (5)" / "Đã nhận (5)").
-    /// These are deliberately NOT the lifetime totals — those live on the stats card (`stats.kudosSent` = 25).
+    /// Lifetime received/sent totals (from profile stats), shown on the kudos filter labels.
     var kudosReceivedCount = 0
     var kudosSentCount = 0
     var isLoading = false
@@ -31,11 +30,10 @@ final class ProfileViewModel {
             }
             user = loaded
             stats = try await UserService.shared.fetchProfileStats(userId: userId)
-            // Kudos are non-fatal: a failure here still renders the profile header + stats
-            // rather than blanking the whole screen, so it stays a `try?` (not the outer catch).
-            kudos = (try? await KudoService.shared.listAllKudos()) ?? []
-            kudosReceivedCount = kudos.count
-            kudosSentCount = kudos.count
+            kudosReceivedCount = stats.kudosReceived
+            kudosSentCount = stats.kudosSent
+            // This user's received kudos (non-fatal: a failure still renders header + stats).
+            kudos = (try? await KudoService.shared.listReceivedKudos(userId: loaded.id)) ?? []
         } catch {
             errorMessage = error.localizedDescription
         }

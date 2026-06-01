@@ -39,16 +39,16 @@ Thay toàn bộ stub service bằng lệnh gọi Supabase thật, để mọi ch
 
 ## Status
 
-**Increment 2 (2026-06-01, Batch 2 Auth + Self-Profile) — Build SUCCEEDED, Review 0-critical (4 fixes), end-to-end verified**
+**Increment 2 Batch 3 (2026-06-01, Kudos READ) — Build SUCCEEDED, Review 7/10 0-critical (H1/H2/L3 fixes applied), end-to-end verified**
 
 | Phase | Status | Notes |
 |-------|--------|-------|
 | P1 Foundation | **PARTIAL** | REST client + RPC `get_profile(p_id)` done (migration applied, verified); SDK client + auth (SupabaseClientProvider) deferred to implementation |
 | P2 Auth | **DONE** | AuthService: real local email/password sign-in (GoTrue REST) + session restore + sign-out; JWT set on SupabaseRESTClient. Google OAuth dev alias (signInWithGoogle = test user seeded); real Google OAuth deferred to prod. Build: SUCCEEDED · Review: 0-critical. |
 | P3 Models/DTO | **PARTIAL** | `SunValueIcon.dbId` + `init?(dbId:)`, `Kudo.title`, `ProfileDTO` (maps to User + stats) done; KudoDTO + full Kudo recipient alignment pending |
-| P4 Read services | **PARTIAL** | `ContentService` wired (reads `content_sections` live); KudoService/AwardService/hashtags/departments pending |
-| P5 User services | **PARTIAL** | `UserService`: fetchCurrentUser (get_profile RPC) + fetchProfileStats (v_profile_stats) wired; live DB verified. KudoService/SecretBox/Notification/search pending. |
-| P6 Integration & verify | pending | P5 partial ✓; remaining: Kudo ops + Secret Box + Notifications + search wiring |
+| P4 Read services | **DONE (Kudos READ)** | ContentService + KudoService.listAllKudos/listKudos/listReceivedKudos wired to live DB (list_kudos RPC w/ pagination, recipient/sender filters, anonymity from kudos_public view). Board feed, All Kudos, Profile received-kudos sections verified w/ real data. Hashtag/department filters on board not yet wired (server-side filter present, UI ignore). AwardService/hashtags/departments still pending. |
+| P5 User services | **PARTIAL** | `UserService`: fetchCurrentUser (get_profile RPC) + fetchProfileStats (v_profile_stats) wired; live DB verified. KudoService.sendKudo/react/unreact/viewKudo, SecretBox, Notification, search pending. |
+| P6 Integration & verify | pending | P4 Kudos read ✓, P5 partial ✓; remaining: Kudo send/react, Secret Box, Notifications, search, other-profile, hashtag/dept board filters. |
 
 **Increment 2 Batch 1 (Auth-Independent) — COMPLETED:**
 - ✅ `supabase/migrations/20260601000800_get_profile_rpc.sql` — `get_profile(p_id)` RPC (composed profile JSON: user + dept + hero tier + icons + stats), SECURITY DEFINER, grant to `authenticated` only (PUBLIC execute revoked)
@@ -58,6 +58,22 @@ Thay toàn bộ stub service bằng lệnh gọi Supabase thật, để mọi ch
 - ✅ Build: SUCCEEDED
 - ✅ Review: 0 critical (2 fixes applied)
 - ✅ `get_profile` RPC verified end-to-end
+
+**Increment 2 Batch 3 (Kudos READ) — COMPLETED:**
+- ✅ `supabase/migrations/20260601000900_list_kudos_rpc.sql` + `20260601001000_refactor_kudos_read.sql` — `list_kudos(p_limit, p_offset, p_recipient, p_sender)` RPC composes kudos JSON from `kudos_public` view, page-size capped, optional recipient/sender filters for board + profile filtering
+- ✅ `KudoService` — KudoDTO decode layer; `listAllKudos(page)` + `listKudos(board feed)` + `listReceivedKudos(userId)` wired to live `list_kudos` RPC (removed dead mockFeed)
+- ✅ `ProfileViewModel` — kudos property now reads user's RECEIVED kudos (not global feed); received/sent counts from real `v_kudos_stats` view (fixed regression)
+- ✅ Dev seed — buddy user + 5 kudos (1 anon, 1 spam) + hashtags + reactions populated; `supabase db reset` pass
+- ✅ Build: SUCCEEDED
+- ✅ Review: 7/10 0-critical (H1/H2/L3 fixes applied)
+- ✅ End-to-end: Kudos board + All Kudos + Profile kudos section show real DB data (anonymity, hashtags, hearts, dates all correct; curl + Kudos board screenshot verified)
+
+**Follow-ups logged (still mock/deferred, do NOT implement now):**
+- P5 rest: KudoService.viewKudo (detail), sendKudo, react/unreact, listHashtags, spotlight/personalStats/giftRecipients
+- P5 rest: SecretBoxService, NotificationService, UserService.fetchUser/searchSunners
+- Board hashtag/department FILTER ignored (server-side filter present in RPC, UI wiring skipped; requires hashtags/departments from DB)
+- Kudo.title in model/DTO but KudoCard heading doesn't render it (P6 UI refinement)
+- Pre-prod (carried): JWT refresh/expiry, revoke PUBLIC EXECUTE on migration-700 functions, SendKudo self-send guard, dev creds behind #if DEBUG
 
 **Increment 2 Batch 2 (Auth + Self-Profile) — COMPLETED:**
 - ✅ `AuthService` — local email/password sign-in (GoTrue REST) + JWT store/restore + sign-out; sets JWT on SupabaseRESTClient
@@ -69,14 +85,3 @@ Thay toàn bộ stub service bằng lệnh gọi Supabase thật, để mọi ch
 - ✅ Build: SUCCEEDED
 - ✅ Review: 0 critical (4 fixes applied)
 - ✅ End-to-end: login → Profile shows real name/dept/icons/stats from DB (curl + in-app screenshot verified)
-
-**Follow-ups logged (H1 + M3 issues, do NOT implement now):**
-- H1 (pre-prod gate): no JWT expiry/refresh check on session restore → silent 401 when token expires; add refresh_token grant + 401→login handler before prod
-- M3 (when Kudos wired): SendKudoViewModel self-send guard uses `currentUserId=""` on live path → set to `AuthService.shared.currentUserId`
-- SECURITY (pre-prod): revoke PUBLIC EXECUTE on migration-700 functions (`grant_national_kudos` etc.) before prod
-
-**Remaining Increment 2 work (Batch 3 onwards):**
-- P3 rest: KudoDTO + recipient alignment
-- P4 rest: KudoService + AwardService + hashtags/departments wired (public-read path)
-- P5 rest: sendKudo + reactions + secret box + notifications via RPC/REST (auth-required path)
-- P6 full: integration + end-to-end verification

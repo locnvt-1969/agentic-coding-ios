@@ -2,6 +2,15 @@
 
 ## [Unreleased] — 2026-06-01
 
+### Added — Kudos READ API (board + all + profile received) wired to live DB (Increment 2 Batch 3)
+
+- `supabase/migrations/20260601000900_list_kudos_rpc.sql` + `20260601001000_refactor_kudos_read.sql` — `list_kudos(p_limit, p_offset, p_recipient, p_sender)` RPC reads from `kudos_public` view (anonymity single-source), page-size capped, optional recipient/sender filter for board/profile filtering
+- `KudoService` — DTO decode layer for Kudos; `listAllKudos(page)` + `listKudos()` (board feed) + `listReceivedKudos(userId)` now query live `list_kudos` RPC (removed dead mockFeed)
+- `ProfileViewModel` — kudos property now reads user's RECEIVED kudos (not global feed); received/sent counts from live `v_kudos_stats` view (fixed regression from batch 2)
+- Dev seed: buddy user + 5 kudos (1 anonymous, 1 spam) + hashtags + reactions; `supabase db reset` pass
+- Build: SUCCEEDED · Review: 7/10 0-critical (H1/H2/L3 fixes applied) · End-to-end: Kudos board + All Kudos + Profile kudos section render real DB data (anonymity, hashtags, hearts, dates verified; curl + Kudos board screenshot)
+- **Known follow-ups (still mock/deferred):** KudoService.viewKudo/sendKudo/react/unreact, listHashtags, spotlight/personalStats/giftRecipients; SecretBoxService; NotificationService; UserService.fetchUser/searchSunners; board hashtag/department filters (server-side RPC filter present, UI wiring skipped); Kudo.title rendering in KudoCard (P6 UI); pre-prod items (JWT refresh/expiry, revoke PUBLIC EXECUTE, SendKudo self-send guard, dev creds #if DEBUG)
+
 ### Added — Supabase Auth (local email/password) + self-Profile wiring (Increment 2 Batch 2)
 
 - `AuthService` — real login via GoTrue REST (email/password sign-in), JWT storage + session restore + sign-out; sets JWT on SupabaseRESTClient for authenticated RPC/REST calls

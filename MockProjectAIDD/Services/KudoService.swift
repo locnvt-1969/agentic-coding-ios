@@ -44,60 +44,30 @@ final class KudoService {
     private init() {}
 
     func listKudos(filter: KudoFilter = KudoFilter()) async throws -> [Kudo] {
-        // TODO: Supabase — board feed with filter. Mock data: KudoService+Mock.swift.
-        var result = Self.mockKudos
-
-        if let hashtagId = filter.hashtagId {
-            result = result.filter { kudo in
-                kudo.hashtags.contains { $0.id == hashtagId }
-            }
-        }
-
-        // Department filter matches the recipient's department name (mock kudos carry
-        // departmentName; resolve the selected id → name via the shared dept list).
-        if let departmentId = filter.departmentId,
-           let departmentName = UserService.mockDepartments.first(where: { $0.id == departmentId })?.name {
-            result = result.filter { kudo in
-                kudo.recipients.contains { $0.departmentName == departmentName }
-            }
-        }
-
-        return result
+        // TODO: server-side filter (needs hashtags/departments wired to DB) — for now the
+        // board shows the full feed regardless of the selected filter.
+        return try await listAllKudos(page: 0)
     }
 
     func listAllKudos(page: Int = 0) async throws -> [Kudo] {
-        // TODO: Supabase — paginated all kudos.
-        // Mock feed (from design). Page 0 returns the sample list; later pages are empty.
-        guard page == 0 else { return [] }
-        return Self.mockFeed
+        let pageSize = 20
+        let dtos = try await SupabaseRESTClient.shared.callRPC(
+            "list_kudos",
+            body: ["p_limit": pageSize, "p_offset": page * pageSize],
+            as: [KudoDTO].self
+        )
+        return dtos.map { $0.toKudo() }
     }
 
-    /// Mock kudos feed sourced from the design content. Replaced by the API later.
-    private static let mockFeed: [Kudo] = {
-        let sender = User(id: "s1", name: "Huỳnh Dương Xuân", departmentName: "CEVC10", level: "Rising Hero")
-        let recipient = User(id: "r1", name: "Dương Xuân Huỳnh", departmentName: "CEVC10", level: "Legend Hero")
-        let date = ISO8601DateFormatter().date(from: "2025-10-30T10:00:00Z") ?? Date(timeIntervalSince1970: 0)
-        let hashtags = [
-            Hashtag(id: "h1", name: "#Dedicated", group: nil),
-            Hashtag(id: "h2", name: "#Inspring", group: nil)
-        ]
-        let message = "Cảm ơn người em bình thường nhưng phi thường :D Cảm ơn sự chăm chỉ, cần mẫn của em đã tạo động lực rất..."
-
-        return (0..<5).map { index in
-            Kudo(
-                id: "kudo-\(index)",
-                sender: sender,
-                recipients: [recipient],
-                message: message,
-                hashtags: hashtags,
-                isAnonymous: false,
-                createdAt: date,
-                reactionCount: 1000,
-                isHighlighted: true,
-                isSpam: index == 0   // first card flagged Spam (per design)
-            )
-        }
-    }()
+    /// Kudos received by a specific user — drives the profile's kudos section.
+    func listReceivedKudos(userId: String) async throws -> [Kudo] {
+        let dtos = try await SupabaseRESTClient.shared.callRPC(
+            "list_kudos",
+            body: ["p_limit": 50, "p_offset": 0, "p_recipient": userId],
+            as: [KudoDTO].self
+        )
+        return dtos.map { $0.toKudo() }
+    }
 
     func viewKudo(id: String) async throws -> Kudo {
         // TODO: Supabase — fetch kudo by id.

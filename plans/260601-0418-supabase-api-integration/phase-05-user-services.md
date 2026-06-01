@@ -1,12 +1,19 @@
 # Phase 05 — User-context services (needs session)
 
-**Priority:** High · **Status:** PARTIAL (2026-06-01) · **Depends:** P02, P03
+**Priority:** High · **Status:** PARTIAL (2026-06-01 Batch 2+3) · **Depends:** P02, P03
 
-**Implementation summary (2026-06-01) — Self-Profile path DONE:**
-- UserService.fetchCurrentUser() ← get_profile(uid) RPC → User + icons + dept
-- UserService.fetchProfileStats(userId) ← v_profile_stats view
-- ProfileSelfContainer: wired to live UserService; displays real name/dept/icons/stats from DB
-- Build: SUCCEEDED, Review: 0-critical (4 fixes), End-to-end: verified (login → Profile shows live DB data)
+**Implementation summary (2026-06-01 Batches 2–3) — Self-Profile + Kudos READ paths DONE:**
+- UserService.fetchCurrentUser() ← get_profile(uid) RPC → User + icons + dept; wired
+- UserService.fetchProfileStats(userId) ← v_profile_stats view; wired
+- KudoService.listReceivedKudos(userId) ← list_kudos(p_recipient=userId) RPC; wired to ProfileViewModel
+- ProfileSelfContainer: displays real name/dept/icons/stats from DB; Kudos section shows user's received kudos from DB
+- Build: SUCCEEDED, Review: 7/10 0-critical (Batch 3), End-to-end: verified (login → Profile, Kudos board, All Kudos show live DB data)
+
+## Status breakdown
+
+**DONE (Batch 2–3):** UserService.fetchCurrentUser + fetchProfileStats; KudoService.listReceivedKudos (reads profile's received kudos from DB).
+
+**PENDING (Batch 4+):** KudoService.sendKudo/viewKudo/react/unreact + listHashtags + spotlight/personalStats/giftRecipients; SecretBoxService.currentBox/openBox; NotificationService.listNotifications/markRead/unreadCount; UserService.fetchUser/searchSunners; board hashtag/dept filters.
 
 ## Goal
 Wire services that depend on the logged-in user (`auth.uid()` via RLS).

@@ -42,14 +42,16 @@ Last updated: 2026-06-01
 
 ---
 
-## Phase 5 — Kudos Screen
-**Status: In Progress**
+## Phase 5 — Kudos Screen (READ API wired)
+**Status: In Progress (READ path live; WRITE/interact pending)**
 
 - `KudosBoardView` + sub-sections: `SpotlightBoardSection` (388 Kudos stat, chart image, non-functional search), `KudosStatsBlock` (personal received/sent counts, heart + x2-fire badge, Secret Box opened/unopened), `GiftRecipientsList` (Top-10 gift recipients)
 - `KudosStats`, `GiftRecipient` models added
-- `KudoService+Mock.swift` — mock data extension (temporary; surgical swap to Supabase API pending SDK wiring)
-- "Mở Secret Box" button wired to Secret Box flow via `AppRouter`; Spotlight search / Top-10 tap / heart = visual-only this pass
-- Build: SUCCEEDED · Review: 8.2/10 approved
+- `KudoService` — `listAllKudos(page)` + `listKudos()` + `listReceivedKudos(userId)` wired to live `list_kudos` RPC (DB); mock extension removed
+- `ProfileViewModel` — kudos property reads RECEIVED kudos; received/sent counts from live `v_kudos_stats` view
+- Board feed, All Kudos, Profile kudos sections show real DB data (anonymity, hashtags, hearts, dates correct)
+- Build: SUCCEEDED · Review: 7/10 0-critical · End-to-end verified (curl + Kudos board screenshot)
+- **Known follow-ups:** Spotlight search / Top-10 tap / heart button remain visual-only (sendKudo/react/viewKudo in Phase 7); board hashtag/dept filters not wired (UI ignores); Kudo.title rendering in KudoCard deferred (P6)
 
 ---
 
@@ -65,12 +67,15 @@ Last updated: 2026-06-01
 
 ---
 
-## Phase 7 — Supabase API Integration (Kudo ops + Secret Box + Notifications)
-**Status: In Progress**
+## Phase 7 — Supabase API Integration (Kudo WRITE + Secret Box + Notifications)
+**Status: In Progress (READ ✓, Batch 3; WRITE pending)**
 
-Remaining user-context services: sendKudo + reactions (heart/un-heart) + secret box open + notifications list.
-- `KudoService`: sendKudo (insert + hash tags), viewKudo, react/unreact
+**Completed (2026-06-01, Batch 3):** Kudos READ (board + all + profile) wired to `list_kudos` RPC; real data flowing, anon/hashtags/stats verified.
+
+**Remaining user-context services:** sendKudo + reactions (heart/un-heart) + secret box open + notifications list.
+- `KudoService`: sendKudo (insert + hash tags), viewKudo, react/unreact, listHashtags, spotlight/personalStats/giftRecipients
 - `SecretBoxService`: currentBox, openBox
 - `NotificationService`: listNotifications, markRead, unreadCount
 - `UserService`: fetchUser (other-profile), searchSunners
+- Board filters: hashtag/department (server-side RPC ready, UI wiring deferred)
 Integration + end-to-end verification per Phase 6 (Supabase API Integration plan).
