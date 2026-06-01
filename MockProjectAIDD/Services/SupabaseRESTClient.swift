@@ -57,6 +57,48 @@ actor SupabaseRESTClient {
         return try await send(request)
     }
 
+    // MARK: - Count (PostgREST Content-Range)
+
+    /// Row count for a table via `Prefer: count=exact`. Requests a zero-width range so
+    /// the server returns the total in `Content-Range` (e.g. `0-0/388`) without rows.
+    func count(_ table: String, query: [URLQueryItem] = []) async throws -> Int {
+        guard var components = URLComponents(
+            url: SupabaseConfig.restURL.appendingPathComponent(table),
+            resolvingAgainstBaseURL: false
+        ) else { throw SupabaseRESTError.invalidURL }
+        var items = query
+        items.append(URLQueryItem(name: "select", value: "id"))
+        components.queryItems = items
+        guard let url = components.url else { throw SupabaseRESTError.invalidURL }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        applyHeaders(&request)
+        request.setValue("count=exact", forHTTPHeaderField: "Prefer")
+        request.setValue("0-0", forHTTPHeaderField: "Range")
+
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            throw SupabaseRESTError.network(error.localizedDescription)
+        }
+        guard let http = response as? HTTPURLResponse else {
+            throw SupabaseRESTError.network("Không có phản hồi.")
+        }
+        if !(200..<300).contains(http.statusCode) {
+            throw SupabaseRESTError.serverStatus(http.statusCode, String(data: data, encoding: .utf8) ?? "")
+        }
+        // Content-Range: "0-0/388" → total after the slash.
+        guard let range = http.value(forHTTPHeaderField: "Content-Range"),
+              let total = range.split(separator: "/").last,
+              let count = Int(total) else {
+            return 0
+        }
+        return count
+    }
+
     // MARK: - RPC (POST /rpc/<name>)
 
     /// Call a Postgres function via PostgREST and decode the returned JSON to `T`.

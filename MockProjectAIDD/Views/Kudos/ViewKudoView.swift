@@ -20,7 +20,8 @@ import SwiftUI
 struct ViewKudoView: View {
     let kudo: Kudo
     var onBack: (() -> Void)?
-    var onComment: (String) -> Void
+    /// Returns true when the comment was posted, so the field can clear (kept on failure).
+    var onComment: (String) async -> Bool
     var onReact: () -> Void
 
     @State private var commentText: String = ""
@@ -93,8 +94,8 @@ struct ViewKudoView: View {
                             onSubmit: {
                                 let trimmed = commentText.trimmingCharacters(in: .whitespacesAndNewlines)
                                 guard !trimmed.isEmpty else { return }
-                                onComment(trimmed)
-                                commentText = ""
+                                // Clear only after a successful post so a failed send keeps the text.
+                                Task { if await onComment(trimmed) { commentText = "" } }
                             }
                         )
                     }
@@ -112,7 +113,7 @@ struct ViewKudoView: View {
 #Preview("View Kudo — Named sender") {
     ViewKudoView(
         kudo: .previewNamed,
-        onComment: { _ in },
+        onComment: { _ in true },
         onReact: {}
     )
 }
@@ -120,7 +121,7 @@ struct ViewKudoView: View {
 #Preview("View Kudo — Anonymous (ẩn danh)") {
     ViewKudoView(
         kudo: .previewAnonymous,
-        onComment: { _ in },
+        onComment: { _ in true },
         onReact: {}
     )
 }

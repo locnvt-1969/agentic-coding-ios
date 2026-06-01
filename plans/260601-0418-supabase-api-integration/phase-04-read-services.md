@@ -1,6 +1,6 @@
 # Phase 04 — Read-public services (no auth needed)
 
-**Priority:** High · **Status:** PARTIAL—Kudos READ DONE (2026-06-01 Batch 3); ContentService + KudoService.listAllKudos/listKudos/listReceivedKudos wired to `list_kudos` RPC; AwardService/hashtags/departments/board-filters pending · **Depends:** P01, P03
+**Priority:** High · **Status:** KUDOS COMPLETE (Batch 6: spotlight/stats/filters/gift recipients wired); Awards/ContentService still mock/deferred · **Depends:** P01, P03
 
 ## Goal
 Wire the services backing public, read-only screens so they show real data with the anon key — visible result without login.

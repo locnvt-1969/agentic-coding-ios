@@ -2,6 +2,20 @@
 
 ## [Unreleased] — 2026-06-01
 
+### Added — Kudos board remaining features wired to live DB; Kudos domain mock-free (Increment 2 Batch 7)
+
+- **DB migration `20260601001300`** — `list_kudos` RPC extended: new params `p_hashtag` (`hashtags.id`) and `p_department` (`departments.id`); board feed now filters server-side (was client-side / ignored)
+- **DB view `v_recent_gift_recipients`** — `user_rewards ⨝ profiles ⨝ rewards`, top 10 by `granted_at desc`; exposes `id`, `name`, `avatar_url`, `reward_text`; granted SELECT to `authenticated`
+- **`SupabaseRESTClient.count(_:)`** — new helper; `GET` with `Prefer: count=exact`; reads `Content-Range` response header; returns total row count as `Int`
+- **`KudoService.spotlightTotalKudos`** — live; calls `count("kudos_public")`
+- **`KudoService.fetchPersonalStats`** — live; queries `v_profile_stats` view (was stubbed)
+- **`KudoService.listGiftRecipients`** — live; queries `v_recent_gift_recipients`
+- **`KudoService.addComment(kudoId:text:)`** — live; inserts into `kudo_comments`; comment submission now functional on kudo detail screen (was read-only)
+- **`KudoService.listKudos(filter:)`** — filter params now forwarded to `list_kudos` RPC as `p_hashtag` / `p_department`
+- **`UserService.listDepartments()`** — live; `GET /rest/v1/departments` (mock removed)
+- **`KudoService+Mock.swift` deleted** — no mock data remains in the Kudos domain; all Kudos service methods use real DB
+- Build: SUCCEEDED · All Kudos board + detail features mock-free; entire Kudos domain on live data
+
 ### Added — Secret Box live + gamification security hardening (Increment 2 Batch 6)
 
 - **`SecretBoxService.currentBox()`** — live; `GET /rest/v1/secret_boxes` filtered to `state=closed` + authenticated user; returns unopened count displayed in UI

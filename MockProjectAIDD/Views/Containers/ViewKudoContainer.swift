@@ -21,8 +21,8 @@ struct ViewKudoContainer: View {
                     onBack: {
                         router.pop()
                     },
-                    onComment: { _ in
-                        // TODO phase-19+: wire comment submission into VM when endpoint exists
+                    onComment: { text in
+                        await vm.addComment(text)
                     },
                     onReact: {
                         vm.toggleReaction()

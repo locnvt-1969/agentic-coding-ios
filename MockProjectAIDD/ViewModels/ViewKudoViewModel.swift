@@ -13,6 +13,7 @@ final class ViewKudoViewModel {
 
     private var isInFlight = false
     private var isReactionInFlight = false
+    private var isCommentInFlight = false
 
     /// Sender display name, respecting anonymity (never exposes a hidden sender).
     var senderDisplayName: String {
@@ -33,6 +34,26 @@ final class ViewKudoViewModel {
             kudo = try await KudoService.shared.viewKudo(id: id)
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Post a comment, then reload the kudo so the new comment (with server-assigned
+    /// author/timestamp) appears. Guarded against concurrent submits. Returns true on
+    /// success so the view can keep the typed text if the post failed (no retype).
+    @discardableResult
+    func addComment(_ text: String) async -> Bool {
+        guard !isCommentInFlight, let kudoId = kudo?.id else { return false }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        isCommentInFlight = true
+        defer { isCommentInFlight = false }
+        do {
+            try await KudoService.shared.addComment(kudoId: kudoId, text: trimmed)
+            kudo = try await KudoService.shared.viewKudo(id: kudoId)
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
         }
     }
 

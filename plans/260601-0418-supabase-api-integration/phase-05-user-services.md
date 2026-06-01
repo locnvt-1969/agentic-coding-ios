@@ -1,26 +1,25 @@
 # Phase 05 — User-context services (needs session)
 
-**Priority:** High · **Status:** DONE (2026-06-01 Batch 2+3+4+5) · **Depends:** P02, P03
+**Priority:** High · **Status:** DONE (2026-06-01 Batch 2–6: all user-context + comment submission complete) · **Depends:** P02, P03
 
-**Implementation summary (2026-06-01 Batches 2–5) — Self-Profile + Kudos READ/WRITE/REACT + Secret Box all DONE:**
-- UserService.fetchCurrentUser() ← get_profile(uid) RPC; fetchUser(id) ← get_profile(id); fetchProfileStats(userId) ← v_profile_stats; searchSunners(query) ← ilike + embed depts; wired + live verified
-- KudoService.listReceivedKudos(userId) ← list_kudos(p_recipient=userId) RPC; wired to ProfileViewModel
-- **KudoService.viewKudo(kudoId)** ← **view_kudo RPC returning kudo + comments**; **react(kudoId)/unreact(kudoId)** ← insert/delete kudo_reactions; optimistic UI in ViewModels
-- **KudosBoardViewModel.toggleReaction** + **ViewKudoViewModel.toggleReaction** — per-id in-flight guard, optimistic state, rollback on error
-- **SecretBoxService.currentBox()** ← GET secret_boxes (state=closed, count unopened); **openBox()** ← RPC open_secret_box (oldest closed → random un-owned icon, all-collected gate). SecretBoxViewModel with availableCount guard; SecretBoxContainer wired (Batch 5).
-- UI: tappable ❤️ (filled/outline = has_reacted) on board cards + detail action bar; Secret Box screen shows count, opens to reward/icon collection
-- ProfileSelfContainer: displays real name/dept/icons/stats; other-profile via fetchUser; Kudos section shows received kudos with real reaction counts
-- Build: SUCCEEDED, Review: 0-critical (all fixes applied), End-to-end: verified (login → profile → kudos with reactions → detail + comments → open secret boxes)
+**Implementation summary (2026-06-01 Batches 2–6) — Self-Profile + Kudos READ/WRITE/REACT/COMMENT + Secret Box all DONE:**
+- UserService.fetchCurrentUser/fetchUser/fetchProfileStats/searchSunners + listDepartments (all wired, live Batch 6)
+- KudoService: listReceivedKudos ← list_kudos RPC; sendKudo ← insert + hashtags; listHashtags; **viewKudo ← view_kudo RPC + comments**; **react/unreact ← insert/delete reactions**; **addComment(kudoId, text) ← insert comment** (Batch 6)
+- **spotlightTotalKudos ← real count**; **fetchPersonalStats ← v_profile_stats (received/sent/hearts)**; **listGiftRecipients ← v_recent_gift_recipients** (all Batch 6)
+- Board hashtag/department filters wired (Batch 6: list_kudos RPC extended to 6 args)
+- **SecretBoxService.currentBox + openBox** ← GET/RPC (optimistic, auto-grant on 5-heart trigger, icon collection)
+- Comment submission: KudoService.addComment + ViewKudoViewModel + Container wiring complete; keeps text on failure (Batch 6)
+- Build: SUCCEEDED, Review: 0-critical (all fixes applied), End-to-end: verified (all Kudo features real)
 
 ## Status breakdown
 
-**DONE (Batch 2–5):** 
-- UserService.fetchCurrentUser + fetchProfileStats + fetchUser + searchSunners (all wired, live)
-- KudoService.listReceivedKudos + sendKudo + listHashtags + **viewKudo (with comments)** + **react/unreact** (all wired, live, optimistic UI confirmed)
-- **SecretBoxService.currentBox + openBox** (wired, live, auto-grant trigger + icon collection verified, Batch 5 security hardening applied)
-- Kudo.hasReacted property + reaction count UI
+**DONE (Batch 2–6):** 
+- UserService: fetchCurrentUser + fetchProfileStats + fetchUser + searchSunners + listDepartments (wired, live)
+- KudoService: listReceivedKudos + sendKudo + listHashtags + viewKudo + react/unreact + **addComment** (all wired, live, optimistic UI, Batch 6)
+- KudoService: spotlightTotalKudos + fetchPersonalStats + listGiftRecipients + board filters (Batch 6)
+- **SecretBoxService.currentBox + openBox** (wired, live, Batch 5 security applied)
 
-**PENDING (Batch 6+):** NotificationService.listNotifications/markRead/unreadCount; board hashtag/dept filter UI wiring (RPC present but UI skipped); comment SUBMISSION (write); spotlight/personalStats/giftRecipients.
+**PENDING (Batch 7+):** NotificationService (stub: listNotifications/markRead/unreadCount); Awards screen (mock data).
 
 ## Goal
 Wire services that depend on the logged-in user (`auth.uid()` via RLS).

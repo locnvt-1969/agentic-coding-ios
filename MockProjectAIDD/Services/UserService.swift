@@ -1,8 +1,8 @@
 // UserService.swift
 // MockProjectAIDD
 //
-// User/directory domain. Stubbed with mock data until Supabase SDK is wired
-// (mirrors AuthService pattern). Mock content sourced from the design.
+// User/directory domain — wired to Supabase via raw REST (get_profile RPC,
+// v_profile_stats, profiles search, departments).
 
 import Foundation
 
@@ -22,17 +22,6 @@ enum UserError: LocalizedError {
 final class UserService {
     static let shared = UserService()
     private init() {}
-
-    /// Mock org departments — drives the Kudos board "Phòng ban" filter dropdown.
-    /// TEMPORARY: replace with a Supabase fetch (`GET /api/v1/departments`) later.
-    static let mockDepartments: [Department] = [
-        Department(id: "d1", name: "CEVC2"),
-        Department(id: "d2", name: "CEVC3"),
-        Department(id: "d3", name: "CEVC4"),
-        Department(id: "d4", name: "CEVC1"),
-        Department(id: "d5", name: "OPD"),
-        Department(id: "d6", name: "Infra")
-    ]
 
     func fetchCurrentUser() async throws -> User {
         guard let uid = AuthService.shared.currentUserId else { throw UserError.notFound }
@@ -87,8 +76,14 @@ final class UserService {
     }
 
     func listDepartments() async throws -> [Department] {
-        // TODO: Supabase — list departments.
-        return Self.mockDepartments
+        try await SupabaseRESTClient.shared.get(
+            "departments",
+            query: [
+                URLQueryItem(name: "select", value: "id,name"),
+                URLQueryItem(name: "order", value: "name.asc")
+            ],
+            as: [Department].self
+        )
     }
 
     /// Decode shape for the sunner search (profiles row + embedded department).

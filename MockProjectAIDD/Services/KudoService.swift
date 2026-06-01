@@ -44,9 +44,13 @@ final class KudoService {
     private init() {}
 
     func listKudos(filter: KudoFilter = KudoFilter()) async throws -> [Kudo] {
-        // TODO: server-side filter (needs hashtags/departments wired to DB) — for now the
-        // board shows the full feed regardless of the selected filter.
-        return try await listAllKudos(page: 0)
+        var body: [String: Any] = ["p_limit": 50, "p_offset": 0]
+        if let hashtagId = filter.hashtagId { body["p_hashtag"] = hashtagId }
+        if let departmentId = filter.departmentId { body["p_department"] = departmentId }
+        let dtos = try await SupabaseRESTClient.shared.callRPC(
+            "list_kudos", body: body, as: [KudoDTO].self
+        )
+        return dtos.map { $0.toKudo() }
     }
 
     func listAllKudos(page: Int = 0) async throws -> [Kudo] {
@@ -126,21 +130,68 @@ final class KudoService {
         )
     }
 
+    /// Add a comment to a kudo (author = signed-in user; RLS enforces author_id = auth.uid).
+    func addComment(kudoId: String, text: String) async throws {
+        guard let uid = AuthService.shared.currentUserId else {
+            throw KudoError.sendFailed("Bạn cần đăng nhập để bình luận.")
+        }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        try await SupabaseRESTClient.shared.insert("kudo_comments", values: [
+            "id": UUID().uuidString.lowercased(),
+            "kudo_id": kudoId,
+            "author_id": uid,
+            "text": trimmed
+        ])
+    }
+
     /// Total Kudos count shown on the Spotlight Board (design B.7.1).
     func spotlightTotalKudos() async throws -> Int {
-        // TODO: Supabase — SELECT count(*) FROM kudos WHERE status='active'.
-        return Self.mockSpotlightTotal
+        // Count from kudos_public (the same source the feed uses) so the total always
+        // tracks what's shown. PostgREST returns it via Content-Range, no row transfer.
+        try await SupabaseRESTClient.shared.count("kudos_public")
     }
 
     /// The current user's personal statistics (ALL KUDOS block, design D.1).
     func fetchPersonalStats() async throws -> KudosStats {
-        // TODO: Supabase — GET /api/v1/users/me/kudos-stats.
-        return Self.mockStats
+        guard let uid = AuthService.shared.currentUserId else {
+            throw KudoError.loadFailed("Bạn cần đăng nhập.")
+        }
+        let rows = try await SupabaseRESTClient.shared.get(
+            "v_profile_stats",
+            query: [
+                URLQueryItem(name: "select", value: "*"),
+                URLQueryItem(name: "profile_id", value: "eq.\(uid)")
+            ],
+            as: [StatsRow].self
+        )
+        guard let s = rows.first else { throw KudoError.loadFailed("Không tìm thấy thống kê.") }
+        // isDoubleBonusActive is an admin-configured special-day flag — no DB source yet.
+        return KudosStats(
+            kudosReceived: s.kudosReceived,
+            kudosSent: s.kudosSent,
+            heartsReceived: s.heartsReceived,
+            isDoubleBonusActive: false,
+            secretBoxesOpened: s.secretBoxOpened,
+            secretBoxesUnopened: s.secretBoxUnopened
+        )
     }
 
-    /// 10 most recent gift recipients (design D.3).
+    /// 10 most recent gift recipients (design D.3) — owner-rights view bypasses user_rewards RLS.
     func listGiftRecipients() async throws -> [GiftRecipient] {
-        // TODO: Supabase — GET /api/v1/reward-recipients?limit=10&order=desc.
-        return Self.mockGiftRecipients
+        try await SupabaseRESTClient.shared.get(
+            "v_recent_gift_recipients",
+            query: [URLQueryItem(name: "select", value: "*")],
+            as: [GiftRecipient].self
+        )
+    }
+
+    /// Decodes a row of `v_profile_stats` (snake_case → camelCase via the shared decoder).
+    private struct StatsRow: Decodable {
+        let kudosReceived: Int
+        let kudosSent: Int
+        let heartsReceived: Int
+        let secretBoxOpened: Int
+        let secretBoxUnopened: Int
     }
 }

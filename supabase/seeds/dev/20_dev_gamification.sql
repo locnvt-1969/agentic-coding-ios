@@ -9,3 +9,13 @@ delete from public.secret_boxes
 insert into public.secret_boxes (profile_id, state)
 select '1628681b-1e3d-42aa-98ee-bfc315b1503b', 'closed'
 from generate_series(1, 5);
+
+-- ── gift recipients — so the board's "10 SUNNER NHẬN QUÀ MỚI NHẤT" list has content.
+-- (icon_collection = collected all 6 icons; national_kudos = a top-5 most-❤️ kudo.)
+delete from public.user_rewards
+ where profile_id in ('1628681b-1e3d-42aa-98ee-bfc315b1503b',
+                      'b0000000-0000-0000-0000-000000000002');
+insert into public.user_rewards (profile_id, reward_id, kudo_id) values
+    ('b0000000-0000-0000-0000-000000000002', 'icon_collection', null),
+    ('1628681b-1e3d-42aa-98ee-bfc315b1503b', 'national_kudos', '11111111-0000-0000-0000-000000000001'),
+    ('b0000000-0000-0000-0000-000000000002', 'national_kudos', '11111111-0000-0000-0000-000000000004');

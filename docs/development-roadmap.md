@@ -42,18 +42,18 @@ Last updated: 2026-06-01
 
 ---
 
-## Phase 5 — Kudos Screen (READ + interact API wired)
-**Status: In Progress (READ ✓, react/unreact ✓, viewKudo ✓; spotlight/stats/giftRecipients pending)**
+## Phase 5 — Kudos Screen (fully live; mock-free)
+**Status: Complete**
 
-- `KudosBoardView` + sub-sections: `SpotlightBoardSection` (388 Kudos stat, chart image, non-functional search), `KudosStatsBlock` (personal received/sent counts, heart + x2-fire badge, Secret Box opened/unopened), `GiftRecipientsList` (Top-10 gift recipients)
+- `KudosBoardView` + sub-sections: `SpotlightBoardSection` (live total from `count("kudos_public")`), `KudosStatsBlock` (personal stats from `v_profile_stats`), `GiftRecipientsList` (top 10 from `v_recent_gift_recipients`)
 - `KudosStats`, `GiftRecipient` models added
-- `KudoService` — `listAllKudos(page)` + `listKudos()` + `listReceivedKudos(userId)` wired to live `list_kudos` RPC (DB); RPC now returns `has_reacted` per user
-- `KudoService.viewKudo(id:)` — live; calls `view_kudo` RPC; returns kudo + comments
-- `KudoService.react` / `unreact` — live; POST / DELETE to `kudo_reactions`; optimistic toggle with in-flight guard and rollback
-- `Kudo.hasReacted` — new model field; ❤️ button on board tappable; kudo detail shows comments (read-only)
-- `ProfileViewModel` — kudos property reads RECEIVED kudos; received/sent counts from live `v_kudos_stats` view
+- `KudoService` — all methods live: `listAllKudos` / `listKudos` (with server-side hashtag + department filter via `list_kudos` 6-param RPC) / `listReceivedKudos` / `viewKudo` / `sendKudo` / `listHashtags` / `react` / `unreact` / `addComment` / `spotlightTotalKudos` / `fetchPersonalStats` / `listGiftRecipients`
+- `UserService.listDepartments` — live (mock removed)
+- `Kudo.hasReacted` — ❤️ button tappable on board; kudo detail shows comments + comment submission live
+- `KudoService+Mock.swift` deleted — no mock remains in Kudos domain
+- `ProfileViewModel` — kudos reads RECEIVED kudos; received/sent counts from live `v_profile_stats`
 - Build: SUCCEEDED · Review: DONE · End-to-end verified
-- **Known follow-ups:** Spotlight search / Top-10 tap remain non-functional; board hashtag/dept filters not wired; Kudo.title rendering in KudoCard deferred; comment submission deferred
+- **Known follow-ups:** Spotlight search bar / Top-10 tap remain non-functional (UI); Kudo.title rendering in KudoCard deferred (P6 UI)
 
 ---
 
@@ -70,7 +70,7 @@ Last updated: 2026-06-01
 ---
 
 ## Phase 7 — Supabase API Integration (Kudo WRITE + interact + Secret Box + Notifications)
-**Status: In Progress (READ ✓ Batch 3, WRITE ✓ Batch 4, interact/viewKudo ✓ Batch 5, Secret Box ✓ Batch 6; Notifications pending)**
+**Status: In Progress (READ ✓ Batch 3, WRITE ✓ Batch 4, interact/viewKudo ✓ Batch 5, Secret Box ✓ Batch 6, Kudos board fully-live ✓ Batch 7; Notifications pending)**
 
 **Completed (2026-06-01, Batch 4):** Kudos WRITE (sendKudo + kudo_hashtags) + search/user-fetch wired to live DB.
 - `KudoService.sendKudo(title, message, recipientId, hashtags, senderAnon)` inserts kudo + junction entries; live verified
@@ -94,8 +94,14 @@ Last updated: 2026-06-01
 - Dev seed: 5 closed boxes for `sunner@sun.com`
 - Build: SUCCEEDED · Security hardening: DONE
 
-**Remaining (Batch 7+):** notifications + comment submission.
+**Completed (2026-06-01, Batch 7):** Kudos board remaining features + filter wiring; Kudos domain mock-free.
+- `list_kudos` RPC extended with `p_hashtag` / `p_department`; board filter now server-side
+- `v_recent_gift_recipients` view added; `KudoService.listGiftRecipients` live
+- `SupabaseRESTClient.count(_:)` added; `spotlightTotalKudos` live
+- `fetchPersonalStats` → `v_profile_stats`; `addComment` live; `listDepartments` live
+- `KudoService+Mock.swift` deleted; Kudos domain entirely mock-free
+- Build: SUCCEEDED
+
+**Remaining (Batch 8+):** notifications.
 - `NotificationService`: listNotifications, markRead, unreadCount
-- `KudoService`: spotlight/personalStats/giftRecipients; comment submission (`addComment`)
-- Board hashtag/department filters (server-side RPC ready, UI wiring deferred)
-- Known issues: sendKudo non-transactional (consider `perform_send_kudo` RPC before prod); Kudo.title not rendered in card
+- Known pre-prod issues: sendKudo non-transactional (consider `perform_send_kudo` RPC); Kudo.title not rendered in card; Spotlight search bar / Top-10 tap non-functional (UI)

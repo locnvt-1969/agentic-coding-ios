@@ -294,6 +294,8 @@ Raw `kudos` is not client-readable; clients use `kudos_public` (sender nulled wh
 ## 5. Automation (business rules)
 
 - **Secret box grant (req 6)** — trigger `after insert/delete on kudo_reactions`: recompute the recipient-sender's total received hearts `H` (❤️ on their sent kudos); ensure `floor(H/5)` boxes exist for them (insert new `closed` boxes for the delta; never revoke on un-heart).
+- **Board filter (migration 20260601001300)** — `list_kudos` RPC signature extended to 6 params: `list_kudos(p_limit, p_offset, p_recipient, p_sender, p_hashtag, p_department)`. `p_hashtag` (`hashtags.id text`, nullable) filters to kudos tagged with that hashtag via `kudo_hashtags`. `p_department` (`departments.id text`, nullable) filters to kudos whose recipient belongs to that department via `profiles.department_id`. Both params are optional (null = no filter). Board feed now filters server-side rather than client-side.
+- **`v_recent_gift_recipients` view (migration 20260601001300)** — `user_rewards ⨝ profiles ⨝ rewards` ordered by `granted_at desc`, top 10 rows; exposes `id` (profile), `name` (`full_name`), `avatar_url`, `reward_text` (`rewards.title`). Granted SELECT to `authenticated`. Queried by `KudoService.listGiftRecipients`.
 - **Open box (req 6)** — RPC `open_secret_box(p_box_id)` (SECURITY DEFINER, `authenticated` only; EXECUTE revoked from public/anon via migration 20260601001200): sets `state='opened'`, picks a **random value_icon the user does NOT yet own** (if all owned → no new icon), upserts `user_value_icons`, sets `reward_value_icon_id`, returns `won_value_icon`. Client calls this RPC and reads the returned icon — never writes `user_value_icons` directly.
 - **Icon-collection gift (req 7)** — trigger `after insert on user_value_icons`: if the user now owns all 6 → insert `user_rewards('icon_collection')` (unique-guarded) + a `reward_granted` notification.
 - **National-kudos gift (req 8)** — function `grant_national_kudos()` (SECURITY DEFINER): takes `v_national_kudos`, inserts `user_rewards('national_kudos', kudo_id)` for each kudo's sender. Run at program close (not real-time). **EXECUTE revoked from public/anon/authenticated** (migration 20260601001200) — not client-callable; must be invoked via `service_role` or a scheduled Edge Function.
@@ -310,12 +312,16 @@ Raw `kudos` is not client-readable; clients use `kudos_public` (sender nulled wh
 | `UserService.fetchCurrentUser / fetchUser(id)` | `profiles` (+ dept, `v_user_hero_tier`, `user_value_icons`) |
 | `UserService.fetchProfileStats(userId)` | `v_profile_stats` |
 | `UserService.searchSunners(query)` | `profiles` ILIKE full_name/department |
-| `UserService.listDepartments` | `departments` |
-| `KudoService.listKudos(filter)` | `kudos_public` (+ hashtag/dept filter) |
+| `UserService.listDepartments` | `GET /rest/v1/departments` (live; mock removed) |
+| `KudoService.listKudos(filter)` | `list_kudos(p_limit, p_offset, p_recipient, p_sender, p_hashtag, p_department)` RPC — server-side hashtag/dept filter |
 | `KudoService.listAllKudos(page)` | `kudos_public` order created_at desc, range pagination |
 | `KudoService.viewKudo(id)` | `kudos_public` + `kudo_comments` |
 | `KudoService.sendKudo(payload)` | insert `kudos`(recipient_id,title,message) + `kudo_hashtags` |
 | `KudoService.listHashtags` | `hashtags` |
+| `KudoService.spotlightTotalKudos` | `count("kudos_public")` via `SupabaseRESTClient.count` (PostgREST `Content-Range`) |
+| `KudoService.fetchPersonalStats` | `v_profile_stats` (live; was stubbed) |
+| `KudoService.listGiftRecipients` | `v_recent_gift_recipients` (top 10; `id`, `name`, `avatar_url`, `reward_text`) |
+| `KudoService.addComment(kudoId:text:)` | insert `kudo_comments` |
 | (heart / un-heart) | insert / delete `kudo_reactions` |
 | `AwardService.fetchAwards(userId)` | `award_recipients` ⨝ `awards` |
 | `AwardService.awardDetail(type)` | `awards` + `award_criteria` |
