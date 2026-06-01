@@ -10,6 +10,15 @@ struct LoginContainerView: View {
     @State private var viewModel = LoginViewModel()
     @EnvironmentObject private var router: AppRouter
 
+    /// DEBUG: hands the dev login form a sign-in action; nil in release (form hidden).
+    private var devSignInHandler: ((String, String) async -> Void)? {
+        #if DEBUG
+        return { email, password in await viewModel.devSignIn(email: email, password: password) }
+        #else
+        return nil
+        #endif
+    }
+
     var body: some View {
         LoginView(
             selectedLanguage: viewModel.selectedLanguage,
@@ -23,7 +32,8 @@ struct LoginContainerView: View {
                 if let lang = AppLanguage(rawValue: code) {
                     viewModel.changeLanguage(to: lang)
                 }
-            }
+            },
+            onDevSignIn: devSignInHandler
         )
         // Error alert — TC_LOGIN_FUN_010 (SwiftUI .alert per spec decision)
         .alert("Sign In Failed", isPresented: $viewModel.showError) {

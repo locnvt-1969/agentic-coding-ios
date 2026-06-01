@@ -73,6 +73,7 @@ sql_paths = [
   "./seeds/dev/00_dev_users.sql",
   "./seeds/dev/10_dev_kudos.sql",
   "./seeds/dev/20_dev_gamification.sql",
+  "./seeds/dev/30_dev_directory.sql",
 ]
 
 [db.network_restrictions]

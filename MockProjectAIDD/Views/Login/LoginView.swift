@@ -21,6 +21,14 @@ struct LoginView: View {
     let isLoading: Bool
     let onLoginWithGoogle: () async -> Void
     let onLanguageChange: (String) -> Void
+    /// DEBUG-only: sign in with an explicit email/password to switch between seeded
+    /// dev users. nil (and absent from the UI) in release builds.
+    var onDevSignIn: ((String, String) async -> Void)? = nil
+
+    #if DEBUG
+    @State private var devEmail = "sunner@sun.com"
+    @State private var devPassword = "Password123!"
+    #endif
 
     var body: some View {
         VStack(spacing: 0) {
@@ -59,6 +67,12 @@ struct LoginView: View {
             }
             .padding(.horizontal, 65)
 
+            #if DEBUG
+            if let onDevSignIn {
+                devLoginForm(onDevSignIn)
+            }
+            #endif
+
             // mms_6 — Copyright footer (centered, bottom)
             Text(selectedLanguage.copyrightText)
                 .font(.system(size: 12, weight: .light))
@@ -79,6 +93,49 @@ struct LoginView: View {
             .ignoresSafeArea()
         )
     }
+
+    #if DEBUG
+    /// Local dev-only credential form. All seeded users share password `Password123!`
+    /// (sunner@sun.com, buddy@sun.com, dir1..20@dev.sun.com) — edit the email to switch.
+    @ViewBuilder
+    private func devLoginForm(_ action: @escaping (String, String) async -> Void) -> some View {
+        VStack(spacing: 8) {
+            Text("DEV LOGIN — switch seeded user")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(Color.yellow.opacity(0.85))
+
+            TextField("email", text: $devEmail)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .foregroundStyle(.black)
+                .padding(8)
+                .background(Color.white.opacity(0.92))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+            SecureField("password", text: $devPassword)
+                .foregroundStyle(.black)
+                .padding(8)
+                .background(Color.white.opacity(0.92))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+            Button {
+                Task { await action(devEmail, devPassword) }
+            } label: {
+                Text("Dev Sign In")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(10)
+                    .background(Color.yellow.opacity(0.85))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
+            .disabled(isLoading)
+        }
+        .font(.system(size: 13))
+        .padding(.horizontal, 40)
+        .padding(.top, 16)
+    }
+    #endif
 }
 
 #Preview {

@@ -45,6 +45,27 @@ final class LoginViewModel {
         }
     }
 
+    #if DEBUG
+    /// DEV-only: sign in with an explicit email/password to switch seeded users.
+    func devSignIn(email: String, password: String) async {
+        guard !isInFlight else { return }
+        isInFlight = true
+        isLoading = true
+        errorMessage = nil
+        defer {
+            isInFlight = false
+            isLoading = false
+        }
+        do {
+            try await AuthService.shared.signIn(email: email, password: password)
+            isAuthenticated = true
+        } catch {
+            errorMessage = error.localizedDescription
+            showError = true
+        }
+    }
+    #endif
+
     func changeLanguage(to language: AppLanguage) {
         selectedLanguageCode = language.rawValue
     }
