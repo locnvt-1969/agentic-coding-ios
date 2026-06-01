@@ -29,10 +29,11 @@ final class SendKudoViewModel {
 
     private var isInFlight = false
 
-    /// Signed-in user id — blocks self-send (spec B.2). Mocked in demo mode.
-    /// TODO(real-API): when useMockKudoData=false, source this from the authenticated user
-    /// (e.g. AuthService) — otherwise the self-send guard in selectRecipient is inactive on the live path.
-    private let currentUserId: String = FeatureFlags.useMockKudoData ? SendKudoMockData.currentUserId : ""
+    /// Signed-in user id — blocks self-send (spec B.2). Live path uses the authenticated user.
+    /// `nil` when not authenticated → selectRecipient surfaces a login prompt (no silent bypass).
+    private var currentUserId: String? {
+        FeatureFlags.useMockKudoData ? SendKudoMockData.currentUserId : AuthService.shared.currentUserId
+    }
 
     // MARK: - Load options
 
@@ -70,7 +71,11 @@ final class SendKudoViewModel {
 
     /// Selects the recipient (single per kudo). Blocks self-send (spec B.2); replaces any prior choice.
     func selectRecipient(_ user: User) {
-        guard user.id != currentUserId else {
+        guard let me = currentUserId else {
+            validationError = "Bạn cần đăng nhập để gửi Kudos."
+            return
+        }
+        guard user.id != me else {
             validationError = "Không thể gửi Kudo cho chính mình."
             return
         }

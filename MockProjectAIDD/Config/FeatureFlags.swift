@@ -16,8 +16,8 @@ enum FeatureFlags {
 
     /// When true (demo mode), the Send/Write Kudo screen uses bundled mock recipients,
     /// hashtags and current user, and simulates submit success instead of calling KudoService.
-    /// Flip to false once the Kudos backend is wired.
-    static let useMockKudoData: Bool = true
+    /// Now false: live KudoService.sendKudo + UserService.searchSunners + listHashtags.
+    static let useMockKudoData: Bool = false
 
     /// When true (demo mode), the Notifications screen loads bundled mock notifications
     /// instead of calling NotificationService. Flip to false once the backend is wired.

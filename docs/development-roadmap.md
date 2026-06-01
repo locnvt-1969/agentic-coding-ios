@@ -68,14 +68,18 @@ Last updated: 2026-06-01
 ---
 
 ## Phase 7 — Supabase API Integration (Kudo WRITE + Secret Box + Notifications)
-**Status: In Progress (READ ✓, Batch 3; WRITE pending)**
+**Status: In Progress (READ ✓ Batch 3, WRITE ✓ Batch 4; react/Secret Box/Notifications pending)**
 
-**Completed (2026-06-01, Batch 3):** Kudos READ (board + all + profile) wired to `list_kudos` RPC; real data flowing, anon/hashtags/stats verified.
+**Completed (2026-06-01, Batch 4):** Kudos WRITE (sendKudo + kudo_hashtags) + search/user-fetch wired to live DB.
+- `KudoService.sendKudo(title, message, recipientId, hashtags, senderAnon)` inserts kudo + junction entries; live verified
+- `KudoService.listHashtags()` reads live hashtags table
+- `UserService.fetchUser(userId)` + `searchSunners(query)` read live profiles + dept; verified end-to-end
+- `SendKudoViewModel` wired to live flow; `FeatureFlags.useMockKudoData = false`
+- Build: SUCCEEDED · Review: 0-critical · End-to-end: compose → send inserts real kudo (appears on feed); search → real users; other-profile → real data (verified)
 
-**Remaining user-context services:** sendKudo + reactions (heart/un-heart) + secret box open + notifications list.
-- `KudoService`: sendKudo (insert + hash tags), viewKudo, react/unreact, listHashtags, spotlight/personalStats/giftRecipients
+**Remaining user-context services (Batch 5+):** react/unreact + viewKudo + secret box + notifications.
+- `KudoService`: viewKudo (detail + comments), react/unreact, spotlight/personalStats/giftRecipients
 - `SecretBoxService`: currentBox, openBox
 - `NotificationService`: listNotifications, markRead, unreadCount
-- `UserService`: fetchUser (other-profile), searchSunners
-- Board filters: hashtag/department (server-side RPC ready, UI wiring deferred)
-Integration + end-to-end verification per Phase 6 (Supabase API Integration plan).
+- Board hashtag/department filters (server-side RPC ready, UI wiring deferred to P6)
+- Known issues: viewKudo still mock (tapping real kudo errors notFound); sendKudo non-transactional (hashtag insert failure doesn't roll back kudo); Kudo.title not rendered in card

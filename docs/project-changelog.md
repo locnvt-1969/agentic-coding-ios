@@ -2,6 +2,18 @@
 
 ## [Unreleased] — 2026-06-01
 
+### Added — Kudos WRITE + Search/Hashtags API wired to live DB (Increment 2 Batch 4)
+
+- `SupabaseRESTClient` — added `insert(endpoint, payload)` method (POST /rest/v1/<table>, return=minimal to avoid payload bloat)
+- `KudoService.sendKudo(title, message, recipientId, hashtags, senderAnon)` — inserts kudos row + maps `kudo_hashtags` junction table entries; sender set to `auth.uid`; return minimal for perf
+- `KudoService.listHashtags()` — live select from `hashtags` table
+- `UserService.fetchUser(userId)` — calls `get_profile(userId)` RPC (returns composed profile JSON: name/dept/icons/stats); removed dead mock directory
+- `UserService.searchSunners(query)` — `ilike` profile search + department name embed; live DB verified
+- `SendKudoViewModel` — currentUserId now optional (fixes compile error); self-send guard enforced; real sendKudo flow wired
+- `FeatureFlags.useMockKudoData = false` — flips to live Send-Kudo flow (compose → send inserts real kudo)
+- Build: SUCCEEDED · Review: 0-critical (H1/M1 fixes applied) · End-to-end: SendKudoContainer compose + submit inserts kudo (appears on feed); SearchSunnerContainer shows real users; ProfileOtherContainer shows real other-profile data (curl + Kudos board screenshot verified)
+- **Known follow-ups (still mock/flagged):** KudoService.viewKudo (detail + comments tapping real kudo errors notFound); react/unreact heart UI; SecretBoxService.currentBox/openBox; NotificationService.listNotifications/markRead; Board hashtag/dept filter UI wiring (RPC param present, ignored); Kudo.title not rendered in KudoCard (P6 UI); non-transactional sendKudo path (kudo saved even if hashtag insert fails) — consider perform_send_kudo RPC before prod
+
 ### Added — Kudos READ API (board + all + profile received) wired to live DB (Increment 2 Batch 3)
 
 - `supabase/migrations/20260601000900_list_kudos_rpc.sql` + `20260601001000_refactor_kudos_read.sql` — `list_kudos(p_limit, p_offset, p_recipient, p_sender)` RPC reads from `kudos_public` view (anonymity single-source), page-size capped, optional recipient/sender filter for board/profile filtering

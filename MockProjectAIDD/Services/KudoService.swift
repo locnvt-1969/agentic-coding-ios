@@ -78,13 +78,33 @@ final class KudoService {
     }
 
     func sendKudo(_ payload: SendKudoPayload) async throws {
-        // TODO: Supabase — insert kudo.
-        throw KudoError.sendFailed("Kudos backend not yet configured.")
+        guard let senderId = AuthService.shared.currentUserId else {
+            throw KudoError.sendFailed("Bạn cần đăng nhập để gửi Kudos.")
+        }
+        let kudoId = UUID().uuidString.lowercased()
+        try await SupabaseRESTClient.shared.insert("kudos", values: [
+            "id": kudoId,
+            "sender_id": senderId,
+            "recipient_id": payload.recipient.id,
+            "title": payload.title,
+            "message": payload.message,
+            "is_anonymous": payload.isAnonymous
+        ])
+        if !payload.hashtags.isEmpty {
+            let rows = payload.hashtags.map { ["kudo_id": kudoId, "hashtag_id": $0.id] }
+            try await SupabaseRESTClient.shared.insert("kudo_hashtags", values: rows)
+        }
     }
 
     func listHashtags() async throws -> [Hashtag] {
-        // TODO: Supabase — list hashtags.
-        return Self.mockHashtags
+        try await SupabaseRESTClient.shared.get(
+            "hashtags",
+            query: [
+                URLQueryItem(name: "select", value: "*"),
+                URLQueryItem(name: "order", value: "name.asc")
+            ],
+            as: [Hashtag].self
+        )
     }
 
     /// Total Kudos count shown on the Spotlight Board (design B.7.1).

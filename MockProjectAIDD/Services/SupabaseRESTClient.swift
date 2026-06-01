@@ -72,7 +72,34 @@ actor SupabaseRESTClient {
         return try await send(request)
     }
 
+    // MARK: - Insert (POST table, return=minimal)
+
+    /// Insert one row (`[String: Any]`) or many (`[[String: Any]]`) into a table.
+    func insert(_ table: String, values: Any) async throws {
+        let url = SupabaseConfig.restURL.appendingPathComponent(table)
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        applyHeaders(&request)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+        request.httpBody = try JSONSerialization.data(withJSONObject: values)
+        try await sendNoContent(request)
+    }
+
     // MARK: - Shared execution
+
+    private func sendNoContent(_ request: URLRequest) async throws {
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            throw SupabaseRESTError.network(error.localizedDescription)
+        }
+        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+            throw SupabaseRESTError.serverStatus(http.statusCode, String(data: data, encoding: .utf8) ?? "")
+        }
+    }
 
     private func send<T: Decodable>(_ request: URLRequest) async throws -> T {
         let data: Data

@@ -44,17 +44,11 @@ final class UserService {
     }
 
     func fetchUser(id: String) async throws -> User {
-        // TODO: Supabase — fetch user by id.
-        // Mock: look the user up in the directory so the opened profile matches
-        // the tapped search result; fall back to a full-collection sample.
-        return Self.directory.first { $0.id == id } ?? User(
-            id: id,
-            name: "Huỳnh Dương Xuân Nhật",
-            departmentName: "CEVC3",
-            role: "Engineer",
-            level: "Rising Hero",
-            collectedValueIcons: SunValueIcon.allCases
+        let dto = try await SupabaseRESTClient.shared.callRPC(
+            "get_profile", body: ["p_id": id], as: ProfileDTO?.self
         )
+        guard let dto else { throw UserError.notFound }
+        return dto.toUser()
     }
 
     func fetchProfileStats(userId: String?) async throws -> ProfileStatsData {
@@ -71,15 +65,25 @@ final class UserService {
     }
 
     func searchSunners(query: String) async throws -> [User] {
-        // TODO: Supabase — full-text user search.
-        let trimmed = query.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return [] }
-        let matches = Self.directory.filter {
-            $0.name.localizedCaseInsensitiveContains(trimmed)
-                || ($0.departmentName?.localizedCaseInsensitiveContains(trimmed) ?? false)
+        // Strip PostgREST ilike wildcards (*, .) so a "*"-only query can't dump the directory.
+        let q = query.trimmingCharacters(in: .whitespaces)
+            .replacingOccurrences(of: "*", with: "")
+            .replacingOccurrences(of: ".", with: "")
+        guard !q.isEmpty else { return [] }
+        let rows = try await SupabaseRESTClient.shared.get(
+            "profiles",
+            query: [
+                URLQueryItem(name: "select", value: "id,full_name,avatar_url,role,departments(name)"),
+                URLQueryItem(name: "full_name", value: "ilike.*\(q)*"),
+                URLQueryItem(name: "limit", value: "20")
+            ],
+            as: [SunnerRow].self
+        )
+        return rows.map {
+            User(id: $0.id, name: $0.fullName,
+                 avatarURL: $0.avatarUrl.flatMap { URL(string: $0) },
+                 departmentName: $0.departments?.name, role: $0.role)
         }
-        // For the mock demo, any non-empty query surfaces the directory if nothing matched.
-        return matches.isEmpty ? Self.directory : matches
     }
 
     func listDepartments() async throws -> [Department] {
@@ -87,17 +91,13 @@ final class UserService {
         return Self.mockDepartments
     }
 
-    /// Mock sunner directory (from design). Drives search results + other-user profiles.
-    private static let directory: [User] = [
-        User(id: "u-101", name: "Huỳnh Dương Xuân Nhật", departmentName: "CEVC3", role: "Engineer",
-             level: "Rising Hero", collectedValueIcons: SunValueIcon.allCases),
-        User(id: "u-102", name: "Dương Xuân Huỳnh", departmentName: "CEVC10", role: "Engineer",
-             level: "Legend Hero", collectedValueIcons: SunValueIcon.allCases),
-        User(id: "u-103", name: "Nguyễn Bá Chức", departmentName: "CEVC10", role: "Engineer",
-             level: "Rising Hero", collectedValueIcons: Array(SunValueIcon.allCases.prefix(4))),
-        User(id: "u-104", name: "Trần Thị Mai", departmentName: "CEVC5", role: "Designer",
-             level: "New Hero", collectedValueIcons: Array(SunValueIcon.allCases.prefix(2))),
-        User(id: "u-105", name: "Lê Văn Phúc", departmentName: "CEVC7", role: "Engineer",
-             level: "Rising Hero", collectedValueIcons: SunValueIcon.allCases)
-    ]
+    /// Decode shape for the sunner search (profiles row + embedded department).
+    private struct SunnerRow: Decodable {
+        let id: String
+        let fullName: String
+        let avatarUrl: String?
+        let role: String?
+        let departments: Dept?
+        struct Dept: Decodable { let name: String }
+    }
 }
